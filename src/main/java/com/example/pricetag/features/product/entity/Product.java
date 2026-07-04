@@ -1,9 +1,9 @@
 package com.example.pricetag.features.product.entity;
 
 import com.example.pricetag.entity.BaseEntity;
-import com.example.pricetag.entity.RatingReview;
 import com.example.pricetag.entity.Variants;
 import com.example.pricetag.features.category.entity.Category;
+import com.example.pricetag.features.ratingReview.entity.RatingReview;
 import com.example.pricetag.features.subcategory.entity.SubCategory;
 import jakarta.persistence.*;
 import lombok.*;

@@ -232,7 +232,7 @@ public class ProductServiceImpl implements ProductService {
         String slug = resolveSlug(createProductRequestDto);
         Product newProduct = createNewProduct(createProductRequestDto, existingSubCategory,
                                               existingCategory, slug);
-
+        
         // Handle variants (if provided) - build variant entities and attach to the new product
         if (createProductRequestDto.getVariants() != null && !createProductRequestDto
                 .getVariants()
