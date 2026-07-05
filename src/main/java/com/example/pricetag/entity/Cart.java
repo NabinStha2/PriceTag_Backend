@@ -11,10 +11,10 @@ import java.util.List;
 
 @Entity
 @Table(name = "carts",
-       indexes = {@Index(name = "idx_user_id",
-                         columnList = "user_id",
-                         unique = true
-       )}
+        indexes = {@Index(name = "idx_user_id",
+                columnList = "user_id",
+                unique = true
+        )}
 )
 @Builder
 @Getter
@@ -28,15 +28,15 @@ public class Cart {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id",
-                nullable = false,
-                unique = true
+            nullable = false,
+            unique = true
     )
     private User user;
 
     @OneToMany(mappedBy = "cart",
-               cascade = CascadeType.ALL,
-               fetch = FetchType.LAZY,
-               orphanRemoval = true
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY,
+            orphanRemoval = true
     )
     private List<CartItem> cartItems;
 
@@ -48,6 +48,7 @@ public class Cart {
     private CartStatus status;
 
     @Column(name = "is_deleted")
+    @Builder.Default
     private Boolean isDeleted = false;
 
     @CreationTimestamp

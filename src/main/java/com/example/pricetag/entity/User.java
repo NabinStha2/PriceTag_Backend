@@ -1,5 +1,6 @@
 package com.example.pricetag.entity;
 
+import com.example.pricetag.features.ratingReview.entity.RatingReview;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -15,11 +16,11 @@ import java.util.Set;
 @Builder
 @Entity
 @Table(name = "users",
-       indexes = {
-               @Index(columnList = "email",
-                      name = "idx_user_email"
-               )
-       }
+        indexes = {
+                @Index(columnList = "email",
+                        name = "idx_user_email"
+                )
+        }
 )
 @Getter
 @Setter
@@ -62,6 +63,7 @@ public class User {
     @Column(name = "is_verified",
             nullable = false
     )
+    @Builder.Default
     private boolean isVerified = false;
 
 //    @OneToMany(mappedBy = "user",
@@ -73,44 +75,49 @@ public class User {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
-               joinColumns = @JoinColumn(name = "user_id"),
-               inverseJoinColumns = @JoinColumn(name = "role_id")
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+    @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
     @OneToMany(mappedBy = "user",
-               cascade = CascadeType.ALL,
-               orphanRemoval = true,
-               fetch = FetchType.LAZY
-    )
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
+    @Builder.Default
     private List<Address> addresses = new ArrayList<>();
 
     @OneToMany(mappedBy = "user",
-               cascade = CascadeType.ALL,
-               orphanRemoval = true,
-               fetch = FetchType.LAZY
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
     )
+    @Builder.Default
     private List<RatingReview> ratingReviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "user",
-               fetch = FetchType.LAZY
+            fetch = FetchType.LAZY
     )
+    @Builder.Default
     private List<Order> orders = new ArrayList<>();
 
     @OneToOne(mappedBy = "user",
-              cascade = CascadeType.ALL,
-              fetch = FetchType.LAZY
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY
     )
     private Cart cart;
 
     @Column(name = "is_active",
             nullable = false
     )
+    @Builder.Default
     private Boolean isActive = true;
 
     @Column(name = "is_deleted",
             nullable = false
     )
+    @Builder.Default
     private Boolean isDeleted = false;
 
     @CreationTimestamp

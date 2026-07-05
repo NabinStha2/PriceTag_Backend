@@ -18,6 +18,7 @@ import java.util.Set;
 public class UserResponse {
     private Long id;
     private String name;
+    @Builder.Default
     private List<Address> addresses = new ArrayList<>();
     private String email;
     private String phoneNumber;

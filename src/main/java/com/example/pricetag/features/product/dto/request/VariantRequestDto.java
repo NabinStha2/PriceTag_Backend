@@ -19,6 +19,7 @@ public class VariantRequestDto {
     private Long colorId;
     @NotBlank(message = "SKU is required")
     private String sku;
+    @Builder.Default
     private Integer stockQuantity = 0;
     private BigDecimal actualPrice;
     private BigDecimal discountedPrice;

@@ -44,6 +44,7 @@ public class Variants {
 
     @Column(name = "stock_quantity",
             nullable = false)
+    @Builder.Default
     private Integer stockQuantity = 0;
 
     @Column(name = "actual_price",

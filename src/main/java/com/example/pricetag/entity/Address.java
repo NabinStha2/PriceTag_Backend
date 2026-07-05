@@ -11,9 +11,9 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "addresses",
-       indexes = {@Index(columnList = "user_id",
-                         name = "idx_address_user_id"
-       )}
+        indexes = {@Index(columnList = "user_id",
+                name = "idx_address_user_id"
+        )}
 )
 @Getter
 @Setter
@@ -27,7 +27,7 @@ public class Address {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id",
-                nullable = false
+            nullable = false
     )
     @JsonIgnore // prevent circular reference in JSON
     private User user;
@@ -70,6 +70,7 @@ public class Address {
     @Column(name = "is_default",
             nullable = false
     )
+    @Builder.Default
     private Boolean isDefault = false;
 
     @CreationTimestamp

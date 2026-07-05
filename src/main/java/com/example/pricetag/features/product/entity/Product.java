@@ -3,7 +3,6 @@ package com.example.pricetag.features.product.entity;
 import com.example.pricetag.entity.BaseEntity;
 import com.example.pricetag.entity.Variants;
 import com.example.pricetag.features.category.entity.Category;
-import com.example.pricetag.features.ratingReview.entity.RatingReview;
 import com.example.pricetag.features.subcategory.entity.SubCategory;
 import jakarta.persistence.*;
 import lombok.*;
@@ -91,12 +90,13 @@ public class Product extends BaseEntity {
             fetch = FetchType.LAZY,
             cascade = CascadeType.ALL,
             orphanRemoval = true)
+    @Builder.Default
     private List<Variants> variants = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product",
-            fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL,
-            orphanRemoval = true)
-    private List<RatingReview> ratingReviews = new ArrayList<>();
+//    @OneToMany(mappedBy = "product",
+//            fetch = FetchType.LAZY,
+//            cascade = CascadeType.ALL,
+//            orphanRemoval = true)
+//    private List<RatingReview> ratingReviews = new ArrayList<>();
 
 }

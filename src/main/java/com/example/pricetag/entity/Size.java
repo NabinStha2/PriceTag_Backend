@@ -13,9 +13,9 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Table(name = "sizes",
-       indexes = {@Index(name = "idx_size_name",
-                         columnList = "name"
-       )}
+        indexes = {@Index(name = "idx_size_name",
+                columnList = "name"
+        )}
 )
 public class Size {
 
@@ -40,13 +40,16 @@ public class Size {
     private String sizeType;
 
     @Column(name = "is_active")
+    @Builder.Default
     private Boolean isActive = true;
 
     @Column(name = "is_deleted")
+    @Builder.Default
     private Boolean isDeleted = false;
 
     @OneToMany(mappedBy = "size",
-               fetch = FetchType.LAZY
+            fetch = FetchType.LAZY
     )
+    @Builder.Default
     private List<Variants> variants = new ArrayList<>();
 }

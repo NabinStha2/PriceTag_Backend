@@ -13,12 +13,12 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "colors",
-       uniqueConstraints = @UniqueConstraint(columnNames = {"hex_code", "name"}),
-       indexes = {@Index(columnList = "hex_code",
-                         name = "idx_hex_code"
-       ), @Index(columnList = "name",
-                 name = "idx_name"
-       )}
+        uniqueConstraints = @UniqueConstraint(columnNames = {"hex_code", "name"}),
+        indexes = {@Index(columnList = "hex_code",
+                name = "idx_hex_code"
+        ), @Index(columnList = "name",
+                name = "idx_name"
+        )}
 )
 public class Color {
     @Id
@@ -36,14 +36,17 @@ public class Color {
     private String hexCode;
 
     @Column(name = "is_active")
+    @Builder.Default
     private Boolean isActive = true;
 
     @Column(name = "is_deleted")
+    @Builder.Default
     private Boolean isDeleted = false;
 
     @OneToMany(mappedBy = "color",
-               fetch = FetchType.LAZY
+            fetch = FetchType.LAZY
     )
+    @Builder.Default
     private List<Variants> variants = new ArrayList<>();
 }
 

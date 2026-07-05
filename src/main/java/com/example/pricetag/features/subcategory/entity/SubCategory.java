@@ -39,6 +39,7 @@ public class SubCategory extends BaseEntity {
     @OneToMany(mappedBy = "subCategory",
             cascade = CascadeType.ALL,
             fetch = FetchType.LAZY)
+    @Builder.Default
     private List<Product> products = new ArrayList<>();
 
     @Builder.Default

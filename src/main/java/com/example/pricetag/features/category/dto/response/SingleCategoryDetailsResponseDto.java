@@ -17,6 +17,7 @@ import java.util.List;
 public class SingleCategoryDetailsResponseDto {
     private Long id;
     private String name;
+    @Builder.Default
     private List<SubCategoryDto> subCategoryDtoList = new ArrayList<>();
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
