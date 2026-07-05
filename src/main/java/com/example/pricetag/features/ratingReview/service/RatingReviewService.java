@@ -1,8 +1,12 @@
 package com.example.pricetag.features.ratingReview.service;
 
-import org.springframework.stereotype.Service;
+import com.example.pricetag.dto.CommonResponseDto;
+import com.example.pricetag.features.ratingReview.dto.request.RatingReviewRequestDto;
+import com.example.pricetag.features.ratingReview.dto.response.RatingReviewResponseDto;
 
-@Service
 public interface RatingReviewService {
+    CommonResponseDto<RatingReviewResponseDto> createRatingReview(
+            Long productId, RatingReviewRequestDto ratingReviewRequestDto
+                                                                 );
 
 }
