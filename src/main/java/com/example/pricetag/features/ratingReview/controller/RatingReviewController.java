@@ -17,7 +17,7 @@ public class RatingReviewController {
     private final RatingReviewService ratingReviewService;
 
     @PostMapping("/product/{producId}")
-    public ResponseEntity<CommonResponseDto<RatingReviewResponseDto>> createRatingReview(
+    public ResponseEntity<CommonResponseDto<Void>> createRatingReview(
             @PathVariable(name = "producId")
             Long productId,
             @RequestBody
@@ -26,5 +26,15 @@ public class RatingReviewController {
                 productId, ratingReviewRequestDto
                                                                        ));
     }
+
+    @GetMapping("/user/{userId}/product/{productId}")
+    public ResponseEntity<CommonResponseDto<RatingReviewResponseDto>> getAllRatingReviewByProductIdAndUserId(
+            @PathVariable(name = "userId")
+            Long userId,
+            @PathVariable(name = "productId")
+            Long productId) {
+        return ResponseEntity.ok(null);
+    }
+
 
 }

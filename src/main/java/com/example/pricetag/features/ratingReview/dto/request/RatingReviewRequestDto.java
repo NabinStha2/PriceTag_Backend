@@ -1,6 +1,5 @@
 package com.example.pricetag.features.ratingReview.dto.request;
 
-import com.example.pricetag.entity.User;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -14,7 +13,7 @@ public class RatingReviewRequestDto {
 //    private Long productId;
 
     @NotBlank(message = "User ID is required")
-    private User userId;
+    private Long userId;
 
     @NotNull(message = "Rating is required")
     @Min(value = 0,
