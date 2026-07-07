@@ -8,18 +8,18 @@ public class ColorLogger {
     private static final Logger LOGGER = LoggerFactory.getLogger(ColorLogger.class);
 
     public static void logDebug(String logging) {
-        LOGGER.debug("\u001B[34m" + logging + "\u001B[0m");
+        LOGGER.debug("\u001B[34m{}\u001B[0m", logging);
     }
 
     public static void logInfo(Object logging) {
-        LOGGER.info("\u001B[32m" + logging + "\u001B[0m");
+        LOGGER.info("\u001B[32m{}\u001B[0m", logging);
     }
 
     public static void logError(String logging) {
-        LOGGER.error("\u001B[31m" + logging + "\u001B[0m");
+        LOGGER.error("\u001B[31m{}\u001B[0m", logging);
     }
 
     public static void logTrace(String logging) {
-        LOGGER.trace("\u001B[33m" + logging + "\u001B[0m");
+        LOGGER.trace("\u001B[33m{}\u001B[0m", logging);
     }
 }
