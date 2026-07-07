@@ -14,6 +14,7 @@ import com.example.pricetag.features.ratingReview.mapper.RatingReviewMapper;
 import com.example.pricetag.features.ratingReview.repository.RatingReviewRepo;
 import com.example.pricetag.features.ratingReview.service.RatingReviewService;
 import com.example.pricetag.repository.UserRepo;
+import com.example.pricetag.services.AuthService;
 import com.example.pricetag.utils.ColorLogger;
 import com.example.pricetag.utils.PageableBuilder;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +35,7 @@ public class RatingReviewServiceImpl implements RatingReviewService {
     private final UserRepo userRepo;
     private final RatingReviewRepo ratingReviewRepo;
     private final RatingReviewMapper ratingReviewMapper;
+    private final AuthService authService;
 
 
     @Override
@@ -42,8 +45,21 @@ public class RatingReviewServiceImpl implements RatingReviewService {
                 .findByIdAndIsActiveTrue(productId)
                 .orElseThrow(() -> new ApplicationException("404", "Product not found",
                                                             HttpStatus.NOT_FOUND));
+
+        Long userId = authService.getCurrentUserId();
+
+        boolean alreadyReviewed = ratingReviewRepo.existsByProductIdAndUserIdAndIsActiveTrue(
+                productId, userId);
+
+        if (alreadyReviewed) {
+            throw new ApplicationException("400", "User has already reviewed this product",
+                                           HttpStatus.BAD_REQUEST);
+        }
+
+        ColorLogger.logInfo("createRatingReview : " + userId + " " + productId);
+
         User existingUser = userRepo
-                .findById(ratingReviewRequestDto.getUserId())
+                .findById(userId)
                 .orElseThrow(() -> new ApplicationException("404", "User not found",
                                                             HttpStatus.NOT_FOUND));
 
@@ -64,6 +80,7 @@ public class RatingReviewServiceImpl implements RatingReviewService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public CommonResponseDto<RatingReviewResponseDto> getRatingReviewById(Long id) {
         RatingReview existingRatingReview = ratingReviewRepo
                 .findById(id)
@@ -83,8 +100,10 @@ public class RatingReviewServiceImpl implements RatingReviewService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CommonResponseDto<RatingReviewResponseDto> getAllRatingReviewByProductIdAndUserId(
-            Long productId, Long userId) {
+            Long productId) {
+        Long userId = authService.getCurrentUserId();
         RatingReview existingRatingReview = ratingReviewRepo
                 .findAllByProductIdAndUserIdAndIsActiveTrue(productId, userId)
                 .orElseThrow(
@@ -104,6 +123,7 @@ public class RatingReviewServiceImpl implements RatingReviewService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public CommonResponseDto<List<RatingReviewResponseDto>> getAllRatingReviewByProductId(
             Long productId, PaginationDto paginationDto) {
         Pageable pageable = PageableBuilder.buildPageable(paginationDto);
@@ -126,9 +146,13 @@ public class RatingReviewServiceImpl implements RatingReviewService {
     }
 
     @Override
-    public CommonResponseDto<List<RatingReviewResponseDto>> getAllRatingReviewByUserId(Long userId,
-                                                                                       PaginationDto paginationDto) {
+    @Transactional(readOnly = true)
+    public CommonResponseDto<List<RatingReviewResponseDto>> getAllRatingReviewByUserId(
+            PaginationDto paginationDto) {
         Pageable pageable = PageableBuilder.buildPageable(paginationDto);
+
+        Long userId = authService.getCurrentUserId();
+
         Page<RatingReview> pageableRatingReview = ratingReviewRepo.findAllByUserIdAndIsActiveTrue(
                 userId, pageable);
 
@@ -147,5 +171,72 @@ public class RatingReviewServiceImpl implements RatingReviewService {
                 .pagination(PaginatedResponseDto.from(pageableRatingReviewResponseDto))
                 .build();
     }
+
+    @Override
+    public CommonResponseDto<Void> updateRatingReview(Long id,
+                                                      RatingReviewRequestDto ratingReviewRequestDto) {
+        RatingReview existingRatingReview = ratingReviewRepo
+                .findByIdAndIsActiveTrue(id)
+                .orElseThrow(() -> new ApplicationException("404", "Rating Review not found",
+                                                            HttpStatus.NOT_FOUND));
+
+        Long userId = authService.getCurrentUserId();
+
+        if (!Objects.equals(userId, existingRatingReview
+                .getUser()
+                .getId())) {
+            throw new ApplicationException("400",
+                                           "You are not authorized to update this rating review",
+                                           HttpStatus.BAD_REQUEST);
+        }
+
+        if (ratingReviewRequestDto.getRating() != null) {
+            existingRatingReview.setRating(ratingReviewRequestDto.getRating());
+        }
+        if (ratingReviewRequestDto.getReview() != null) {
+            existingRatingReview.setReview(ratingReviewRequestDto.getReview());
+        }
+
+        RatingReviewResponseDto updatedRatingReview = ratingReviewMapper.mapRatingReviewToRatingReviewResponseDto(
+                existingRatingReview);
+
+
+        ColorLogger.logDebug("updatedRatingReview : " + updatedRatingReview);
+
+        return CommonResponseDto
+                .<Void>builder()
+                .message("Rating and review updated successfully")
+                .status(HttpStatus.CREATED.value())
+                .success(true)
+                .build();
+    }
+
+    @Override
+    public CommonResponseDto<Void> deleteRatingReview(Long id) {
+        RatingReview existingRatingReview = ratingReviewRepo
+                .findByIdAndIsActiveTrue(id)
+                .orElseThrow(() -> new ApplicationException("404", "Rating Review not found",
+                                                            HttpStatus.NOT_FOUND));
+        Long userId = authService.getCurrentUserId();
+        if (!Objects.equals(userId, existingRatingReview
+                .getUser()
+                .getId())) {
+            throw new ApplicationException("400",
+                                           "You are not authorized to delete this rating review",
+                                           HttpStatus.BAD_REQUEST);
+        }
+
+
+        existingRatingReview.setIsActive(false);
+        existingRatingReview.setDeleted(true);
+
+        return CommonResponseDto
+                .<Void>builder()
+                .message("Rating and review deleted successfully")
+                .status(HttpStatus.CREATED.value())
+                .success(true)
+                .build();
+    }
+
 
 }

@@ -1,6 +1,9 @@
 package com.example.pricetag.features.ratingReview.dto.request;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
@@ -9,12 +12,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RatingReviewRequestDto {
-//    @NotBlank(message = "Product ID is required")
-//    private Long productId;
-
-    @NotBlank(message = "User ID is required")
-    private Long userId;
-
     @NotNull(message = "Rating is required")
     @Min(value = 0,
             message = "Rating must be at least 0")

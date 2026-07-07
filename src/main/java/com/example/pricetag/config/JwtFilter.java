@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -33,7 +34,8 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
         String token = null;
         String userName = null;
@@ -47,7 +49,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 ColorLogger.logError(e.toString());
                 response.setContentType("application/json");
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                CommonResponseDto<String> responseDto = CommonResponseDto.<String>builder()
+                CommonResponseDto<String> responseDto = CommonResponseDto
+                        .<String>builder()
                         .success(false)
                         .message("Token expired")
                         .status(HttpStatus.UNAUTHORIZED.value())
@@ -59,14 +62,22 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
         }
-        if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (userName != null && SecurityContextHolder
+                                        .getContext()
+                                        .getAuthentication() == null) {
             ColorLogger.logInfo("I am inside JwtFilter :: " + userName);
             UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
             if (jwtService.validateToken(token, userDetails)) {
-                ColorLogger.logInfo("I am inside JwtFilter validateToken :: " + userDetails);
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                Logger
+                        .getLogger(getClass().getName())
+                        .info("I am inside JwtFilter validateToken :: " +
+                              userDetails.getUsername());
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                SecurityContextHolder
+                        .getContext()
+                        .setAuthentication(authToken);
             }
         }
         filterChain.doFilter(request, response);

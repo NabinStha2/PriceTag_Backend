@@ -19,7 +19,7 @@ public class RatingReviewController {
 
     private final RatingReviewService ratingReviewService;
 
-    @PostMapping("/product/{producId}")
+    @PostMapping("/add/product/{producId}")
     public ResponseEntity<CommonResponseDto<Void>> createRatingReview(
             @PathVariable(name = "producId")
             Long productId,
@@ -33,20 +33,16 @@ public class RatingReviewController {
     @GetMapping("/{id}")
     public ResponseEntity<CommonResponseDto<RatingReviewResponseDto>> getRatingReviewById(
             @PathVariable
-            Long id
-                                                                                         ) {
-        return ResponseEntity.ok(
-                ratingReviewService.getRatingReviewById(id));
+            Long id) {
+        return ResponseEntity.ok(ratingReviewService.getRatingReviewById(id));
     }
 
-    @GetMapping("/user/{userId}/product/{productId}")
+    @GetMapping("/user/product/{productId}")
     public ResponseEntity<CommonResponseDto<RatingReviewResponseDto>> getAllRatingReviewByProductIdAndUserId(
-            @PathVariable
-            Long userId,
             @PathVariable
             Long productId) {
         return ResponseEntity.ok(
-                ratingReviewService.getAllRatingReviewByProductIdAndUserId(productId, userId));
+                ratingReviewService.getAllRatingReviewByProductIdAndUserId(productId));
     }
 
     @GetMapping("/product/{productId}")
@@ -59,16 +55,13 @@ public class RatingReviewController {
             int page,
             @RequestParam(name = "limit",
                     defaultValue = "5",
-                    required = false
-            )
+                    required = false)
             int limit,
             @RequestParam(name = "sortBy",
-                    required = false
-            )
+                    required = false)
             String sortBy,
             @RequestParam(name = "order",
-                    required = false
-            )
+                    required = false)
             String order
 
                                                                                                          ) {
@@ -83,26 +76,21 @@ public class RatingReviewController {
                 ratingReviewService.getAllRatingReviewByProductId(productId, paginationDtoData));
     }
 
-    @GetMapping("/user/{userId}")
+    @GetMapping("/user")
     public ResponseEntity<CommonResponseDto<List<RatingReviewResponseDto>>> getAllRatingReviewByUserId(
-            @PathVariable
-            Long userId,
             @RequestParam(name = "page",
                     defaultValue = "1",
                     required = false)
             int page,
             @RequestParam(name = "limit",
                     defaultValue = "5",
-                    required = false
-            )
+                    required = false)
             int limit,
             @RequestParam(name = "sortBy",
-                    required = false
-            )
+                    required = false)
             String sortBy,
             @RequestParam(name = "order",
-                    required = false
-            )
+                    required = false)
             String order
 
                                                                                                       ) {
@@ -113,8 +101,24 @@ public class RatingReviewController {
                 .sortBy(sortBy)
                 .order(order)
                 .build();
+        return ResponseEntity.ok(ratingReviewService.getAllRatingReviewByUserId(paginationDtoData));
+    }
+
+    @PatchMapping("/update/{id}")
+    public ResponseEntity<CommonResponseDto<Void>> updateRatingReview(
+            @PathVariable
+            Long id,
+            @RequestBody
+            RatingReviewRequestDto ratingReviewRequestDto) {
         return ResponseEntity.ok(
-                ratingReviewService.getAllRatingReviewByUserId(userId, paginationDtoData));
+                ratingReviewService.updateRatingReview(id, ratingReviewRequestDto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<CommonResponseDto<Void>> deleteRatingReview(
+            @PathVariable
+            Long id) {
+        return ResponseEntity.ok(ratingReviewService.deleteRatingReview(id));
     }
 
 }

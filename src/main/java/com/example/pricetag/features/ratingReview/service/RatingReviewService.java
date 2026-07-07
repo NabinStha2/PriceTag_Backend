@@ -11,17 +11,22 @@ public interface RatingReviewService {
     CommonResponseDto<Void> createRatingReview(Long productId,
                                                RatingReviewRequestDto ratingReviewRequestDto);
 
+
     CommonResponseDto<RatingReviewResponseDto> getRatingReviewById(
             Long id);
 
     CommonResponseDto<RatingReviewResponseDto> getAllRatingReviewByProductIdAndUserId(
-            Long productId, Long userId);
+            Long productId);
 
 
     CommonResponseDto<List<RatingReviewResponseDto>> getAllRatingReviewByProductId(Long productId,
                                                                                    PaginationDto paginationDto);
 
-    CommonResponseDto<List<RatingReviewResponseDto>> getAllRatingReviewByUserId(Long userId,
-                                                                                PaginationDto paginationDto);
+    CommonResponseDto<List<RatingReviewResponseDto>> getAllRatingReviewByUserId(
+            PaginationDto paginationDto);
 
+    CommonResponseDto<Void> updateRatingReview(Long id,
+                                               RatingReviewRequestDto ratingReviewRequestDto);
+
+    CommonResponseDto<Void> deleteRatingReview(Long id);
 }
