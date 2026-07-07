@@ -6,7 +6,9 @@ import com.example.pricetag.dto.PaginationDto;
 import com.example.pricetag.features.ratingReview.dto.request.RatingReviewRequestDto;
 import com.example.pricetag.features.ratingReview.dto.response.RatingReviewResponseDto;
 import com.example.pricetag.features.ratingReview.service.RatingReviewService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,14 +21,16 @@ public class RatingReviewController {
 
     private final RatingReviewService ratingReviewService;
 
-    @PostMapping("/add/product/{producId}")
+    @PostMapping("/add/product/{productId}")
+    @Valid
     public ResponseEntity<CommonResponseDto<Void>> createRatingReview(
-            @PathVariable(name = "producId")
+            @PathVariable
             Long productId,
             @RequestBody
             RatingReviewRequestDto ratingReviewRequestDto) {
-        return ResponseEntity.ok(
-                ratingReviewService.createRatingReview(productId, ratingReviewRequestDto));
+        return ResponseEntity
+                .status(HttpStatus.CREATED.value())
+                .body(ratingReviewService.createRatingReview(productId, ratingReviewRequestDto));
     }
 
 
@@ -105,6 +109,7 @@ public class RatingReviewController {
     }
 
     @PatchMapping("/update/{id}")
+    @Valid
     public ResponseEntity<CommonResponseDto<Void>> updateRatingReview(
             @PathVariable
             Long id,

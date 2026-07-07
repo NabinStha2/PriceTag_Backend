@@ -83,7 +83,7 @@ public class RatingReviewServiceImpl implements RatingReviewService {
     @Transactional(readOnly = true)
     public CommonResponseDto<RatingReviewResponseDto> getRatingReviewById(Long id) {
         RatingReview existingRatingReview = ratingReviewRepo
-                .findById(id)
+                .findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new ApplicationException("404", "Rating and Review Not Found",
                                                             HttpStatus.NOT_FOUND));
 
@@ -185,9 +185,9 @@ public class RatingReviewServiceImpl implements RatingReviewService {
         if (!Objects.equals(userId, existingRatingReview
                 .getUser()
                 .getId())) {
-            throw new ApplicationException("400",
+            throw new ApplicationException("403",
                                            "You are not authorized to update this rating review",
-                                           HttpStatus.BAD_REQUEST);
+                                           HttpStatus.UNAUTHORIZED);
         }
 
         if (ratingReviewRequestDto.getRating() != null) {
@@ -206,7 +206,7 @@ public class RatingReviewServiceImpl implements RatingReviewService {
         return CommonResponseDto
                 .<Void>builder()
                 .message("Rating and review updated successfully")
-                .status(HttpStatus.CREATED.value())
+                .status(HttpStatus.OK.value())
                 .success(true)
                 .build();
     }
@@ -233,7 +233,7 @@ public class RatingReviewServiceImpl implements RatingReviewService {
         return CommonResponseDto
                 .<Void>builder()
                 .message("Rating and review deleted successfully")
-                .status(HttpStatus.CREATED.value())
+                .status(HttpStatus.OK.value())
                 .success(true)
                 .build();
     }
