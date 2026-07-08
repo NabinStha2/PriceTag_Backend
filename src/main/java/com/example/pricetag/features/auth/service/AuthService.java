@@ -8,6 +8,7 @@ import com.example.pricetag.features.auth.dto.responseDto.AuthResponseDto;
 import com.example.pricetag.features.auth.repository.AuthRepository;
 import com.example.pricetag.features.user.entity.User;
 import com.example.pricetag.features.user.repository.UserRepo;
+import com.example.pricetag.services.UserRegistrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
