@@ -1,8 +1,8 @@
 package com.example.pricetag.features.ratingReview.entity;
 
 import com.example.pricetag.entity.BaseEntity;
-import com.example.pricetag.entity.User;
 import com.example.pricetag.features.product.entity.Product;
+import com.example.pricetag.features.user.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

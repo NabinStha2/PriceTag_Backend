@@ -1,7 +1,7 @@
 package com.example.pricetag.features.ratingReview.service;
 
 import com.example.pricetag.dto.CommonResponseDto;
-import com.example.pricetag.dto.PaginationDto;
+import com.example.pricetag.dto.PaginationRequestDto;
 import com.example.pricetag.features.ratingReview.dto.request.RatingReviewRequestDto;
 import com.example.pricetag.features.ratingReview.dto.response.RatingReviewResponseDto;
 
@@ -20,10 +20,10 @@ public interface RatingReviewService {
 
 
     CommonResponseDto<List<RatingReviewResponseDto>> getAllRatingReviewByProductId(Long productId,
-                                                                                   PaginationDto paginationDto);
+                                                                                   PaginationRequestDto paginationRequestDto);
 
     CommonResponseDto<List<RatingReviewResponseDto>> getAllRatingReviewByUserId(
-            PaginationDto paginationDto);
+            PaginationRequestDto paginationRequestDto);
 
     CommonResponseDto<Void> updateRatingReview(Long id,
                                                RatingReviewRequestDto ratingReviewRequestDto);

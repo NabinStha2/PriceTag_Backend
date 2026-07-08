@@ -1,5 +1,6 @@
 package com.example.pricetag.features.product.dto.request;
 
+import com.example.pricetag.features.Variant.dto.requestDto.VariantRequestDto;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,7 +9,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
-import com.example.pricetag.features.product.dto.request.VariantRequestDto;
 
 @Getter
 @Setter

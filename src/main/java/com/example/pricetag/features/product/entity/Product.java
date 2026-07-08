@@ -1,7 +1,7 @@
 package com.example.pricetag.features.product.entity;
 
 import com.example.pricetag.entity.BaseEntity;
-import com.example.pricetag.entity.Variants;
+import com.example.pricetag.features.Variant.entity.Variants;
 import com.example.pricetag.features.category.entity.Category;
 import com.example.pricetag.features.subcategory.entity.SubCategory;
 import jakarta.persistence.*;

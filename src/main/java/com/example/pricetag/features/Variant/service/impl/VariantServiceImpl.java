@@ -2,11 +2,13 @@ package com.example.pricetag.features.Variant.service.impl;
 
 
 import com.example.pricetag.dto.CommonResponseDto;
-import com.example.pricetag.entity.Color;
-import com.example.pricetag.entity.Size;
-import com.example.pricetag.entity.Variants;
 import com.example.pricetag.enums.EntityType;
 import com.example.pricetag.exceptions.ApplicationException;
+import com.example.pricetag.features.Variant.dto.requestDto.VariantRequestDto;
+import com.example.pricetag.features.Variant.dto.responseDto.VariantResponseDto;
+import com.example.pricetag.features.Variant.entity.Color;
+import com.example.pricetag.features.Variant.entity.Size;
+import com.example.pricetag.features.Variant.entity.Variants;
 import com.example.pricetag.features.Variant.mapper.VariantMapper;
 import com.example.pricetag.features.Variant.repository.ColorRepo;
 import com.example.pricetag.features.Variant.repository.SizeRepo;
@@ -14,8 +16,6 @@ import com.example.pricetag.features.Variant.repository.VariantRepo;
 import com.example.pricetag.features.Variant.service.VariantService;
 import com.example.pricetag.features.media.dto.response.MediaResponseDto;
 import com.example.pricetag.features.media.service.MediaService;
-import com.example.pricetag.features.product.dto.request.VariantRequestDto;
-import com.example.pricetag.features.product.dto.response.VariantResponseDto;
 import com.example.pricetag.features.product.entity.Product;
 import com.example.pricetag.features.product.repository.ProductRepo;
 import lombok.RequiredArgsConstructor;

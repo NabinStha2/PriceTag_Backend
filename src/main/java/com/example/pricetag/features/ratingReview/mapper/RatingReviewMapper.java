@@ -1,11 +1,11 @@
 package com.example.pricetag.features.ratingReview.mapper;
 
 
-import com.example.pricetag.entity.User;
 import com.example.pricetag.features.product.entity.Product;
 import com.example.pricetag.features.ratingReview.dto.request.RatingReviewRequestDto;
 import com.example.pricetag.features.ratingReview.dto.response.RatingReviewResponseDto;
 import com.example.pricetag.features.ratingReview.entity.RatingReview;
+import com.example.pricetag.features.user.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;

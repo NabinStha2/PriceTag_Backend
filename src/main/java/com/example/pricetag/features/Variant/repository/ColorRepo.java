@@ -1,6 +1,6 @@
 package com.example.pricetag.features.Variant.repository;
 
-import com.example.pricetag.entity.Color;
+import com.example.pricetag.features.Variant.entity.Color;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

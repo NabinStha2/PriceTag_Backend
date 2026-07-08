@@ -2,9 +2,9 @@ package com.example.pricetag.features.ratingReview.service.impl;
 
 import com.example.pricetag.dto.CommonResponseDto;
 import com.example.pricetag.dto.PaginatedResponseDto;
-import com.example.pricetag.dto.PaginationDto;
-import com.example.pricetag.entity.User;
+import com.example.pricetag.dto.PaginationRequestDto;
 import com.example.pricetag.exceptions.ApplicationException;
+import com.example.pricetag.features.auth.service.AuthService;
 import com.example.pricetag.features.product.entity.Product;
 import com.example.pricetag.features.product.repository.ProductRepo;
 import com.example.pricetag.features.ratingReview.dto.request.RatingReviewRequestDto;
@@ -13,8 +13,8 @@ import com.example.pricetag.features.ratingReview.entity.RatingReview;
 import com.example.pricetag.features.ratingReview.mapper.RatingReviewMapper;
 import com.example.pricetag.features.ratingReview.repository.RatingReviewRepo;
 import com.example.pricetag.features.ratingReview.service.RatingReviewService;
-import com.example.pricetag.repository.UserRepo;
-import com.example.pricetag.services.AuthService;
+import com.example.pricetag.features.user.entity.User;
+import com.example.pricetag.features.user.repository.UserRepo;
 import com.example.pricetag.utils.ColorLogger;
 import com.example.pricetag.utils.PageableBuilder;
 import lombok.RequiredArgsConstructor;
@@ -125,8 +125,8 @@ public class RatingReviewServiceImpl implements RatingReviewService {
     @Override
     @Transactional(readOnly = true)
     public CommonResponseDto<List<RatingReviewResponseDto>> getAllRatingReviewByProductId(
-            Long productId, PaginationDto paginationDto) {
-        Pageable pageable = PageableBuilder.buildPageable(paginationDto);
+            Long productId, PaginationRequestDto paginationRequestDto) {
+        Pageable pageable = PageableBuilder.buildPageable(paginationRequestDto);
         Page<RatingReview> pageableRatingReview = ratingReviewRepo.findAllByProductIdAndIsActiveTrue(
                 productId, pageable);
         Page<RatingReviewResponseDto> pageableRatingReviewResponseDto = pageableRatingReview.map(
@@ -148,8 +148,8 @@ public class RatingReviewServiceImpl implements RatingReviewService {
     @Override
     @Transactional(readOnly = true)
     public CommonResponseDto<List<RatingReviewResponseDto>> getAllRatingReviewByUserId(
-            PaginationDto paginationDto) {
-        Pageable pageable = PageableBuilder.buildPageable(paginationDto);
+            PaginationRequestDto paginationRequestDto) {
+        Pageable pageable = PageableBuilder.buildPageable(paginationRequestDto);
 
         Long userId = authService.getCurrentUserId();
 

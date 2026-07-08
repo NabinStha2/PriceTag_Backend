@@ -1,11 +1,11 @@
 package com.example.pricetag.features.Variant.mapper;
 
 
-import com.example.pricetag.entity.Color;
-import com.example.pricetag.entity.Size;
-import com.example.pricetag.entity.Variants;
-import com.example.pricetag.features.product.dto.request.VariantRequestDto;
-import com.example.pricetag.features.product.dto.response.VariantResponseDto;
+import com.example.pricetag.features.Variant.dto.requestDto.VariantRequestDto;
+import com.example.pricetag.features.Variant.dto.responseDto.VariantResponseDto;
+import com.example.pricetag.features.Variant.entity.Color;
+import com.example.pricetag.features.Variant.entity.Size;
+import com.example.pricetag.features.Variant.entity.Variants;
 import com.example.pricetag.features.product.entity.Product;
 import org.mapstruct.*;
 

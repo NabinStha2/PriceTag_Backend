@@ -1,11 +1,11 @@
 package com.example.pricetag.features.product.service;
 
 import com.example.pricetag.dto.CommonResponseDto;
-import com.example.pricetag.dto.PaginationDto;
-import com.example.pricetag.dto.SubCategoryDto;
+import com.example.pricetag.dto.PaginationRequestDto;
 import com.example.pricetag.features.product.dto.request.CreateProductRequestDto;
 import com.example.pricetag.features.product.dto.response.ProductResponseDto;
 import com.example.pricetag.features.product.dto.response.SingleProductDetailsResponseDto;
+import com.example.pricetag.features.subcategory.dto.response.SubCategoryResponseDto;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,21 +13,26 @@ import java.util.List;
 @Service
 public interface ProductService {
 
-    CommonResponseDto<ProductResponseDto> createProduct(CreateProductRequestDto createProductRequestDto);
+    CommonResponseDto<ProductResponseDto> createProduct(
+            CreateProductRequestDto createProductRequestDto);
 
-    CommonResponseDto<List<ProductResponseDto>> getAllProducts(PaginationDto paginationDto);
+    CommonResponseDto<List<ProductResponseDto>> getAllProducts(
+            PaginationRequestDto paginationRequestDto);
 
     CommonResponseDto<SingleProductDetailsResponseDto> getSingleProduct(Long productId);
 
-    CommonResponseDto<List<ProductResponseDto>> getProductsWithSubCategoryId(SubCategoryDto subCategoryDto,
-                                                                             PaginationDto paginationDto);
+    CommonResponseDto<List<ProductResponseDto>> getProductsWithSubCategoryId(
+            SubCategoryResponseDto subCategoryResponseDto,
+            PaginationRequestDto paginationRequestDto);
 
-    CommonResponseDto<List<ProductResponseDto>> getSearchProductsWithSubCategoryIdAndName(SubCategoryDto subCategoryDto,
-                                                                                          PaginationDto paginationDto,
-                                                                                          String name);
+    CommonResponseDto<List<ProductResponseDto>> getSearchProductsWithSubCategoryIdAndName(
+            SubCategoryResponseDto subCategoryResponseDto,
+            PaginationRequestDto paginationRequestDto,
+            String name);
 
     CommonResponseDto<Void> deleteProductById(Long productId);
 
-    CommonResponseDto<ProductResponseDto> editProduct(CreateProductRequestDto createProductRequestDto);
+    CommonResponseDto<ProductResponseDto> editProduct(
+            CreateProductRequestDto createProductRequestDto);
 
 }

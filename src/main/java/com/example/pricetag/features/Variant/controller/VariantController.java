@@ -2,9 +2,9 @@ package com.example.pricetag.features.Variant.controller;
 
 
 import com.example.pricetag.dto.CommonResponseDto;
+import com.example.pricetag.features.Variant.dto.requestDto.VariantRequestDto;
+import com.example.pricetag.features.Variant.dto.responseDto.VariantResponseDto;
 import com.example.pricetag.features.Variant.service.VariantService;
-import com.example.pricetag.features.product.dto.request.VariantRequestDto;
-import com.example.pricetag.features.product.dto.response.VariantResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

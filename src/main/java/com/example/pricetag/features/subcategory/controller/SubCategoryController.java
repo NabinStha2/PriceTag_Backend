@@ -1,10 +1,10 @@
 package com.example.pricetag.features.subcategory.controller;
 
 import com.example.pricetag.dto.CommonResponseDto;
-import com.example.pricetag.dto.SubCategoryDto;
 import com.example.pricetag.exceptions.ApplicationException;
 import com.example.pricetag.features.category.dto.response.CategoryResponseDto;
 import com.example.pricetag.features.subcategory.dto.request.CreateSubCategoryRequestDto;
+import com.example.pricetag.features.subcategory.dto.response.SubCategoryResponseDto;
 import com.example.pricetag.features.subcategory.service.SubCategoryService;
 import com.example.pricetag.utils.ColorLogger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,10 +26,10 @@ public class SubCategoryController {
     @PatchMapping("/edit")
     public ResponseEntity<CommonResponseDto> editSubCategory(
             @RequestBody
-            SubCategoryDto subCategoryDto)
+            SubCategoryResponseDto subCategoryResponseDto)
             throws ApplicationException {
-        ColorLogger.logInfo(subCategoryDto.toString());
-        return ResponseEntity.ok(subCategoryService.editSubCategory(subCategoryDto));
+        ColorLogger.logInfo(subCategoryResponseDto.toString());
+        return ResponseEntity.ok(subCategoryService.editSubCategory(subCategoryResponseDto));
     }
 
     @PostMapping("/{categoryId}/add")
@@ -39,7 +39,8 @@ public class SubCategoryController {
             @ModelAttribute
             CreateSubCategoryRequestDto createSubCategoryRequestDto)
             throws ApplicationException {
-        return ResponseEntity.ok(subCategoryService.createSubCategory(categoryId, createSubCategoryRequestDto));
+        return ResponseEntity.ok(
+                subCategoryService.createSubCategory(categoryId, createSubCategoryRequestDto));
     }
 
     @GetMapping("/{categoryId}")
@@ -48,7 +49,8 @@ public class SubCategoryController {
             Long categoryId) throws ApplicationException {
         CategoryResponseDto categoryResponseDto = new CategoryResponseDto();
         categoryResponseDto.setId(categoryId);
-        return ResponseEntity.ok(subCategoryService.getSubCategoriesWithCategoryId(categoryResponseDto));
+        return ResponseEntity.ok(
+                subCategoryService.getSubCategoriesWithCategoryId(categoryResponseDto));
     }
 
     @DeleteMapping("/{subCategoryId}")

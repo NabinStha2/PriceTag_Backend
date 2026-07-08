@@ -1,12 +1,12 @@
 package com.example.pricetag.features.product.controller;
 
 import com.example.pricetag.dto.CommonResponseDto;
-import com.example.pricetag.dto.PaginationDto;
-import com.example.pricetag.dto.SubCategoryDto;
+import com.example.pricetag.dto.PaginationRequestDto;
 import com.example.pricetag.features.product.dto.request.CreateProductRequestDto;
 import com.example.pricetag.features.product.dto.response.ProductResponseDto;
 import com.example.pricetag.features.product.dto.response.SingleProductDetailsResponseDto;
 import com.example.pricetag.features.product.service.ProductService;
+import com.example.pricetag.features.subcategory.dto.response.SubCategoryResponseDto;
 import com.example.pricetag.utils.ColorLogger;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -47,9 +47,9 @@ public class ProductController {
                     required = false
             )
             String order) {
-        SubCategoryDto subCategoryDto = new SubCategoryDto();
-        subCategoryDto.setId(subCategoryId);
-        PaginationDto paginationDto = PaginationDto
+        SubCategoryResponseDto subCategoryResponseDto = new SubCategoryResponseDto();
+        subCategoryResponseDto.setId(subCategoryId);
+        PaginationRequestDto paginationDto = PaginationRequestDto
                 .builder()
                 .page(page)
                 .limit(limit)
@@ -58,7 +58,7 @@ public class ProductController {
                 .build();
 //        ColorLogger.logInfo("paginationDto :: " + paginationDto.toString());
         return ResponseEntity.ok(
-                productService.getProductsWithSubCategoryId(subCategoryDto, paginationDto));
+                productService.getProductsWithSubCategoryId(subCategoryResponseDto, paginationDto));
     }
 
     @PostMapping("/category/{categoryId}/subcategory/{subCategoryId}/add")
@@ -95,7 +95,7 @@ public class ProductController {
                     required = false
             )
             String order) {
-        PaginationDto paginationDto = PaginationDto
+        PaginationRequestDto paginationDto = PaginationRequestDto
                 .builder()
                 .page(page)
                 .limit(limit)
@@ -140,9 +140,9 @@ public class ProductController {
                     required = false
             )
             String name) {
-        SubCategoryDto subCategoryDto = new SubCategoryDto();
-        subCategoryDto.setId(subCategoryId);
-        PaginationDto paginationDto = PaginationDto
+        SubCategoryResponseDto subCategoryResponseDto = new SubCategoryResponseDto();
+        subCategoryResponseDto.setId(subCategoryId);
+        PaginationRequestDto paginationDto = PaginationRequestDto
                 .builder()
                 .page(page)
                 .limit(limit)
@@ -151,7 +151,7 @@ public class ProductController {
                 .build();
         ColorLogger.logInfo("paginationDto :: " + paginationDto.toString());
         return ResponseEntity.ok(
-                productService.getSearchProductsWithSubCategoryIdAndName(subCategoryDto,
+                productService.getSearchProductsWithSubCategoryIdAndName(subCategoryResponseDto,
                                                                          paginationDto, name));
     }
 

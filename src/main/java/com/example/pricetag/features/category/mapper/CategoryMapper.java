@@ -11,21 +11,28 @@ import org.mapstruct.MappingConstants;
 
 import java.util.List;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = {SubCategoryMapper.class})
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
+        uses = {SubCategoryMapper.class})
 public interface CategoryMapper {
 
     // Map Category entity to basic CategoryResponseDto
-    @Mapping(source = "categoryName", target = "name")
+    @Mapping(source = "categoryName",
+            target = "name")
     CategoryResponseDto mapCategoryToCategoryResponseDto(Category category);
 
     List<CategoryResponseDto> mapCategoryListToCategoryResponseDtoList(List<Category> categories);
 
     // Map Category entity to SingleCategoryDetailsResponseDto including subcategories
-    @Mapping(source = "categoryName", target = "name")
-    @Mapping(source = "subCategories", target = "subCategoryDtoList")
-    SingleCategoryDetailsResponseDto mapCategoryToSingleCategoryDetailsResponseDto(Category category);
+    @Mapping(source = "categoryName",
+            target = "name")
+    @Mapping(source = "subCategories",
+            target = "subCategoryResponseDtoList")
+    SingleCategoryDetailsResponseDto mapCategoryToSingleCategoryDetailsResponseDto(
+            Category category);
 
     // Map CreateCategoryRequestDto to Category entity
-    @Mapping(source = "name", target = "categoryName")
-    Category mapCreateCategoryRequestDtoToCategory(CreateCategoryRequestDto createCategoryRequestDto);
+    @Mapping(source = "name",
+            target = "categoryName")
+    Category mapCreateCategoryRequestDtoToCategory(
+            CreateCategoryRequestDto createCategoryRequestDto);
 }

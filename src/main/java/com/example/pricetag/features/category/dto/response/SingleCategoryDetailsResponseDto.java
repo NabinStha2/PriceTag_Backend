@@ -1,6 +1,6 @@
 package com.example.pricetag.features.category.dto.response;
 
-import com.example.pricetag.dto.SubCategoryDto;
+import com.example.pricetag.features.subcategory.dto.response.SubCategoryResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +18,7 @@ public class SingleCategoryDetailsResponseDto {
     private Long id;
     private String name;
     @Builder.Default
-    private List<SubCategoryDto> subCategoryDtoList = new ArrayList<>();
+    private List<SubCategoryResponseDto> subCategoryResponseDtoList = new ArrayList<>();
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

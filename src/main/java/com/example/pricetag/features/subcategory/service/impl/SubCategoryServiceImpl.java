@@ -1,7 +1,6 @@
 package com.example.pricetag.features.subcategory.service.impl;
 
 import com.example.pricetag.dto.CommonResponseDto;
-import com.example.pricetag.dto.SubCategoryDto;
 import com.example.pricetag.enums.EntityType;
 import com.example.pricetag.exceptions.ApplicationException;
 import com.example.pricetag.features.category.dto.response.CategoryResponseDto;
@@ -10,6 +9,7 @@ import com.example.pricetag.features.category.repository.CategoryRepo;
 import com.example.pricetag.features.media.dto.response.MediaResponseDto;
 import com.example.pricetag.features.media.service.MediaService;
 import com.example.pricetag.features.subcategory.dto.request.CreateSubCategoryRequestDto;
+import com.example.pricetag.features.subcategory.dto.response.SubCategoryResponseDto;
 import com.example.pricetag.features.subcategory.entity.SubCategory;
 import com.example.pricetag.features.subcategory.mapper.SubCategoryMapper;
 import com.example.pricetag.features.subcategory.repository.SubCategoryRepo;
@@ -45,46 +45,47 @@ public class SubCategoryServiceImpl implements SubCategoryService {
     public CommonResponseDto getAllSubCategories() {
         List<SubCategory> subCategories = subCategoryRepo.findAll();
 
-        List<SubCategoryDto> subCategoryDtoList = new ArrayList<>();
+        List<SubCategoryResponseDto> subCategoryResponseDtoList = new ArrayList<>();
         subCategories.forEach((sub) -> {
 
 //            CategoryDto newCategoryDto = new CategoryDto();
 //            newCategoryDto.setId(sub.getCategory().getId());
 //            newCategoryDto.setCategoryName(sub.getCategory().getCategoryName());
 
-            SubCategoryDto newSubCategoryDto = new SubCategoryDto();
-            newSubCategoryDto.setId(sub.getId());
-            newSubCategoryDto.setSubCategoryName(sub.getSubCategoryName());
-            newSubCategoryDto.setCreatedAt(sub.getCreatedAt());
-            newSubCategoryDto.setUpdatedAt(sub.getUpdatedAt());
-            newSubCategoryDto.setCategoryId(sub
-                                                    .getCategory()
-                                                    .getId());
+            SubCategoryResponseDto newSubCategoryResponseDto = new SubCategoryResponseDto();
+            newSubCategoryResponseDto.setId(sub.getId());
+            newSubCategoryResponseDto.setSubCategoryName(sub.getSubCategoryName());
+            newSubCategoryResponseDto.setCreatedAt(sub.getCreatedAt());
+            newSubCategoryResponseDto.setUpdatedAt(sub.getUpdatedAt());
+            newSubCategoryResponseDto.setCategoryId(sub
+                                                            .getCategory()
+                                                            .getId());
 
-            subCategoryDtoList.add(newSubCategoryDto);
+            subCategoryResponseDtoList.add(newSubCategoryResponseDto);
         });
 
         return CommonResponseDto
                 .builder()
                 .message("Success")
-                .data(Map.of("results", subCategoryDtoList))
+                .data(Map.of("results", subCategoryResponseDtoList))
                 .success(true)
                 .build();
 
     }
 
     @Override
-    public CommonResponseDto editSubCategory(SubCategoryDto subCategoryDto)
+    public CommonResponseDto editSubCategory(SubCategoryResponseDto subCategoryResponseDto)
             throws ApplicationException {
         Optional<SubCategory> existingSubCategoryOptional = subCategoryRepo.findById(
-                subCategoryDto.getId());
+                subCategoryResponseDto.getId());
         if (existingSubCategoryOptional.isPresent()) {
             SubCategory existingSubCategory = existingSubCategoryOptional.get();
 
-            existingSubCategory.setSubCategoryName(subCategoryDto.getSubCategoryName());
-            if (subCategoryDto.getCategoryId() != null) {
+            existingSubCategory.setSubCategoryName(subCategoryResponseDto.getSubCategoryName());
+            if (subCategoryResponseDto.getCategoryId() != null) {
                 existingSubCategory.setCategory(categoryRepo
-                                                        .findById(subCategoryDto.getCategoryId())
+                                                        .findById(
+                                                                subCategoryResponseDto.getCategoryId())
                                                         .orElseThrow(() -> new ApplicationException(
                                                                 "404",
                                                                 "Category not found",
@@ -182,29 +183,30 @@ public class SubCategoryServiceImpl implements SubCategoryService {
             Category existingCategory = existingCategoryOptional.get();
 
             List<SubCategory> subCategories = existingCategory.getSubCategories();
-            List<SubCategoryDto> subCategoryDtoList = new ArrayList<>();
+            List<SubCategoryResponseDto> subCategoryResponseDtoList = new ArrayList<>();
 
             subCategories.forEach(subCategory -> {
 //                CategoryDto newCategoryDto = new CategoryDto();
 //                newCategoryDto.setId(subCategory.getCategory().getId());
 //                newCategoryDto.setCategoryName(subCategory.getCategory().getCategoryName());
 
-                subCategoryDtoList.add(SubCategoryDto
-                                               .builder()
-                                               .id(subCategory.getId())
-                                               .categoryId(subCategory
-                                                                   .getCategory()
-                                                                   .getId())
-                                               .subCategoryName(subCategory.getSubCategoryName())
-                                               .createdAt(subCategory.getCreatedAt())
-                                               .updatedAt(subCategory.getUpdatedAt())
-                                               .build());
+                subCategoryResponseDtoList.add(SubCategoryResponseDto
+                                                       .builder()
+                                                       .id(subCategory.getId())
+                                                       .categoryId(subCategory
+                                                                           .getCategory()
+                                                                           .getId())
+                                                       .subCategoryName(
+                                                               subCategory.getSubCategoryName())
+                                                       .createdAt(subCategory.getCreatedAt())
+                                                       .updatedAt(subCategory.getUpdatedAt())
+                                                       .build());
             });
 
             return CommonResponseDto
                     .builder()
                     .message("Success")
-                    .data(Map.of("results", subCategoryDtoList, "categoryName",
+                    .data(Map.of("results", subCategoryResponseDtoList, "categoryName",
                                  existingCategory.getCategoryName()))
                     .success(true)
                     .build();

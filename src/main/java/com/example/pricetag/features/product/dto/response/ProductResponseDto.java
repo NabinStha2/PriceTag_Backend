@@ -1,7 +1,7 @@
 package com.example.pricetag.features.product.dto.response;
 
-import com.example.pricetag.dto.SubCategoryDto;
 import com.example.pricetag.features.category.dto.response.CategoryResponseDto;
+import com.example.pricetag.features.subcategory.dto.response.SubCategoryResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,5 +29,5 @@ public class ProductResponseDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private CategoryResponseDto category;
-    private SubCategoryDto subCategory;
+    private SubCategoryResponseDto subCategory;
 }

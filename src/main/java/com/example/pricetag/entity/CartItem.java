@@ -1,6 +1,8 @@
 package com.example.pricetag.entity;
 
+import com.example.pricetag.features.Variant.entity.Variants;
 import com.example.pricetag.features.product.entity.Product;
+import com.example.pricetag.features.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

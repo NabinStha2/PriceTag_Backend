@@ -2,10 +2,13 @@ package com.example.pricetag.features.product.service.impl;
 
 import com.example.pricetag.dto.CommonResponseDto;
 import com.example.pricetag.dto.PaginatedResponseDto;
-import com.example.pricetag.dto.PaginationDto;
-import com.example.pricetag.dto.SubCategoryDto;
+import com.example.pricetag.dto.PaginationRequestDto;
 import com.example.pricetag.enums.EntityType;
 import com.example.pricetag.exceptions.ApplicationException;
+import com.example.pricetag.features.Variant.dto.requestDto.VariantRequestDto;
+import com.example.pricetag.features.Variant.entity.Color;
+import com.example.pricetag.features.Variant.entity.Size;
+import com.example.pricetag.features.Variant.entity.Variants;
 import com.example.pricetag.features.Variant.repository.ColorRepo;
 import com.example.pricetag.features.Variant.repository.SizeRepo;
 import com.example.pricetag.features.Variant.service.VariantService;
@@ -14,13 +17,13 @@ import com.example.pricetag.features.category.repository.CategoryRepo;
 import com.example.pricetag.features.media.dto.response.MediaResponseDto;
 import com.example.pricetag.features.media.service.MediaService;
 import com.example.pricetag.features.product.dto.request.CreateProductRequestDto;
-import com.example.pricetag.features.product.dto.request.VariantRequestDto;
 import com.example.pricetag.features.product.dto.response.ProductResponseDto;
 import com.example.pricetag.features.product.dto.response.SingleProductDetailsResponseDto;
 import com.example.pricetag.features.product.entity.Product;
 import com.example.pricetag.features.product.mapper.ProductMapper;
 import com.example.pricetag.features.product.repository.ProductRepo;
 import com.example.pricetag.features.product.service.ProductService;
+import com.example.pricetag.features.subcategory.dto.response.SubCategoryResponseDto;
 import com.example.pricetag.features.subcategory.entity.SubCategory;
 import com.example.pricetag.features.subcategory.repository.SubCategoryRepo;
 import com.example.pricetag.utils.ColorLogger;
@@ -232,14 +235,14 @@ public class ProductServiceImpl implements ProductService {
         String slug = resolveSlug(createProductRequestDto);
         Product newProduct = createNewProduct(createProductRequestDto, existingSubCategory,
                                               existingCategory, slug);
-        
+
         // Handle variants (if provided) - build variant entities and attach to the new product
         if (createProductRequestDto.getVariants() != null && !createProductRequestDto
                 .getVariants()
                 .isEmpty()) {
             for (VariantRequestDto vDto : createProductRequestDto.getVariants()) {
-                com.example.pricetag.entity.Size size = null;
-                com.example.pricetag.entity.Color color = null;
+                Size size = null;
+                Color color = null;
 
                 if (vDto.getSizeId() != null) {
                     size = sizeRepo
@@ -255,7 +258,7 @@ public class ProductServiceImpl implements ProductService {
                                                                         HttpStatus.NOT_FOUND));
                 }
 
-                com.example.pricetag.entity.Variants variant = com.example.pricetag.entity.Variants
+                Variants variant = Variants
                         .builder()
                         .sku(vDto.getSku())
                         .stockQuantity(
@@ -306,11 +309,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public CommonResponseDto<List<ProductResponseDto>> getProductsWithSubCategoryId(
-            SubCategoryDto subCategoryDto, PaginationDto paginationDto) {
-        Pageable pageable = PageableBuilder.buildPageable(paginationDto);
-        if (subCategoryRepo.existsSubCategoryById(subCategoryDto.getId())) {
+            SubCategoryResponseDto subCategoryResponseDto,
+            PaginationRequestDto paginationRequestDto) {
+        Pageable pageable = PageableBuilder.buildPageable(paginationRequestDto);
+        if (subCategoryRepo.existsSubCategoryById(subCategoryResponseDto.getId())) {
             Page<Product> existingProducts = productRepo.findAllBySubCategoryIdAndIsActiveTrue(
-                    subCategoryDto.getId(), pageable);
+                    subCategoryResponseDto.getId(), pageable);
             List<ProductResponseDto> productResponseDtoList = productMapper.mapProductListToProductResponseDtoList(
                     existingProducts.getContent());
 
@@ -329,8 +333,9 @@ public class ProductServiceImpl implements ProductService {
 
 
     @Override
-    public CommonResponseDto<List<ProductResponseDto>> getAllProducts(PaginationDto paginationDto) {
-        Pageable pageable = PageableBuilder.buildPageable(paginationDto);
+    public CommonResponseDto<List<ProductResponseDto>> getAllProducts(
+            PaginationRequestDto paginationRequestDto) {
+        Pageable pageable = PageableBuilder.buildPageable(paginationRequestDto);
 
         Page<Product> existingProductList = productRepo.findAllByIsActiveTrue(pageable);
 
@@ -350,11 +355,13 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public CommonResponseDto<List<ProductResponseDto>> getSearchProductsWithSubCategoryIdAndName(
-            SubCategoryDto subCategoryDto, PaginationDto paginationDto, String name) {
-        Pageable pageable = PageableBuilder.buildPageable(paginationDto);
-        if (subCategoryRepo.existsSubCategoryById(subCategoryDto.getId())) {
+            SubCategoryResponseDto subCategoryResponseDto,
+            PaginationRequestDto paginationRequestDto,
+            String name) {
+        Pageable pageable = PageableBuilder.buildPageable(paginationRequestDto);
+        if (subCategoryRepo.existsSubCategoryById(subCategoryResponseDto.getId())) {
             Page<Product> productsList = productRepo.findAllBySubCategoryIdAndNameContainingIgnoreCase(
-                    subCategoryDto.getId(), pageable, name);
+                    subCategoryResponseDto.getId(), pageable, name);
 
             List<ProductResponseDto> productResponseDtoList = productMapper.mapProductListToProductResponseDtoList(
                     productsList.getContent());

@@ -2,7 +2,7 @@ package com.example.pricetag.features.ratingReview.controller;
 
 
 import com.example.pricetag.dto.CommonResponseDto;
-import com.example.pricetag.dto.PaginationDto;
+import com.example.pricetag.dto.PaginationRequestDto;
 import com.example.pricetag.features.ratingReview.dto.request.RatingReviewRequestDto;
 import com.example.pricetag.features.ratingReview.dto.response.RatingReviewResponseDto;
 import com.example.pricetag.features.ratingReview.service.RatingReviewService;
@@ -69,7 +69,7 @@ public class RatingReviewController {
             String order
 
                                                                                                          ) {
-        PaginationDto paginationDtoData = PaginationDto
+        PaginationRequestDto paginationRequestDto = PaginationRequestDto
                 .builder()
                 .page(page)
                 .limit(limit)
@@ -77,7 +77,7 @@ public class RatingReviewController {
                 .order(order)
                 .build();
         return ResponseEntity.ok(
-                ratingReviewService.getAllRatingReviewByProductId(productId, paginationDtoData));
+                ratingReviewService.getAllRatingReviewByProductId(productId, paginationRequestDto));
     }
 
     @GetMapping("/user")
@@ -98,7 +98,7 @@ public class RatingReviewController {
             String order
 
                                                                                                       ) {
-        PaginationDto paginationDtoData = PaginationDto
+        PaginationRequestDto paginationDtoData = PaginationRequestDto
                 .builder()
                 .page(page)
                 .limit(limit)

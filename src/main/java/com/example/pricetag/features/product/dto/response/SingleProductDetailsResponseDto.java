@@ -1,8 +1,9 @@
 package com.example.pricetag.features.product.dto.response;
 
-import com.example.pricetag.dto.SubCategoryDto;
+import com.example.pricetag.features.Variant.dto.responseDto.VariantResponseDto;
 import com.example.pricetag.features.category.dto.response.CategoryResponseDto;
 import com.example.pricetag.features.media.dto.response.MediaResponseDto;
+import com.example.pricetag.features.subcategory.dto.response.SubCategoryResponseDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,7 +36,7 @@ public class SingleProductDetailsResponseDto {
     private LocalDateTime updatedAt;
 
     private CategoryResponseDto category;
-    private SubCategoryDto subCategory;
+    private SubCategoryResponseDto subCategory;
 
     private List<VariantResponseDto> variants;
 }
