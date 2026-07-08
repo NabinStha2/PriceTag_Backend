@@ -1,4 +1,4 @@
-package com.example.pricetag.services;
+package com.example.pricetag.features.auth.service;
 
 import com.example.pricetag.enums.AppUserRole;
 import com.example.pricetag.exceptions.ApplicationException;
@@ -6,7 +6,6 @@ import com.example.pricetag.features.auth.dto.requestDto.RegisterRequestDto;
 import com.example.pricetag.features.auth.entity.Role;
 import com.example.pricetag.features.auth.repository.AuthRepository;
 import com.example.pricetag.features.auth.repository.RoleRepository;
-import com.example.pricetag.features.auth.service.OtpService;
 import com.example.pricetag.features.user.entity.User;
 import com.example.pricetag.utils.ColorLogger;
 import org.springframework.beans.factory.annotation.Autowired;
