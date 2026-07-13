@@ -1,4 +1,4 @@
-package com.example.pricetag.services;
+package com.example.pricetag.features.cart.service;
 
 import com.example.pricetag.dto.AddCartItemDto;
 import com.example.pricetag.dto.CommonResponseDto;

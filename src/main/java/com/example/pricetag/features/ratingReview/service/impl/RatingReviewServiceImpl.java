@@ -221,9 +221,9 @@ public class RatingReviewServiceImpl implements RatingReviewService {
         if (!Objects.equals(userId, existingRatingReview
                 .getUser()
                 .getId())) {
-            throw new ApplicationException("400",
+            throw new ApplicationException("403",
                                            "You are not authorized to delete this rating review",
-                                           HttpStatus.BAD_REQUEST);
+                                           HttpStatus.FORBIDDEN);
         }
 
 

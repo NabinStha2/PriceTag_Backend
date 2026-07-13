@@ -1,19 +1,19 @@
-package com.example.pricetag.services.impl;
+package com.example.pricetag.features.cart.service.impl;
 
 import com.example.pricetag.dto.AddCartItemDto;
 import com.example.pricetag.dto.CartItemDto;
 import com.example.pricetag.dto.CommonResponseDto;
-import com.example.pricetag.entity.CartItem;
 import com.example.pricetag.exceptions.ApplicationException;
 import com.example.pricetag.features.Variant.entity.Variants;
 import com.example.pricetag.features.Variant.repository.VariantRepo;
 import com.example.pricetag.features.auth.service.AuthService;
+import com.example.pricetag.features.cart.entity.CartItem;
+import com.example.pricetag.features.cart.repository.CartItemRepo;
+import com.example.pricetag.features.cart.service.CartItemService;
 import com.example.pricetag.features.product.entity.Product;
 import com.example.pricetag.features.product.repository.ProductRepo;
 import com.example.pricetag.features.user.entity.User;
 import com.example.pricetag.features.user.repository.UserRepo;
-import com.example.pricetag.repository.CartItemRepo;
-import com.example.pricetag.services.CartItemService;
 import com.example.pricetag.utils.ColorLogger;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -40,7 +40,7 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     private static CartItemDto buildCartItemDto(CartItem newCartItem, User existingUser) {
-        Product product = newCartItem.getProduct();
+//        Product product = newCartItem.getProduct();
 
         return CartItemDto
                 .builder()
@@ -162,7 +162,6 @@ public class CartItemServiceImpl implements CartItemService {
             Optional<CartItem> filteredCartItem = listOfCartItem
                     .stream()
                     .filter(cartItem -> cartItem
-                                                .getProduct()
                                                 .getId()
                                                 .equals(existingProduct
                                                                 .get()
@@ -191,8 +190,6 @@ public class CartItemServiceImpl implements CartItemService {
                 // Create a new cart item
                 CartItem newCartItem = CartItem
                         .builder()
-                        .user(existingUser)
-                        .product(existingProduct.get())
                         .quantity(addCartItemDto.getQuantity())
                         .variant(existingVariant.get())
                         .build();

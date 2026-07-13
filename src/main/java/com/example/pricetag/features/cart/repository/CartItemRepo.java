@@ -1,6 +1,6 @@
-package com.example.pricetag.repository;
+package com.example.pricetag.features.cart.repository;
 
-import com.example.pricetag.entity.CartItem;
+import com.example.pricetag.features.cart.entity.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,9 +1,9 @@
 package com.example.pricetag.features.user.entity;
 
 import com.example.pricetag.entity.Address;
-import com.example.pricetag.entity.Cart;
 import com.example.pricetag.entity.Order;
 import com.example.pricetag.features.auth.entity.Role;
+import com.example.pricetag.features.cart.entity.Cart;
 import com.example.pricetag.features.ratingReview.entity.RatingReview;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -60,13 +60,6 @@ public class User {
     @Builder.Default
     private boolean isVerified = false;
 
-//    @OneToMany(mappedBy = "user",
-//               cascade = CascadeType.ALL,
-//               orphanRemoval = true,
-//               fetch = FetchType.LAZY
-//    )
-//    private List<CartItem> cartItems;
-
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -94,8 +87,7 @@ public class User {
     private List<Order> orders = new ArrayList<>();
 
     @OneToOne(mappedBy = "user",
-            cascade = CascadeType.ALL,
-            fetch = FetchType.LAZY)
+            cascade = CascadeType.ALL)
     private Cart cart;
 
     @Column(name = "is_active",

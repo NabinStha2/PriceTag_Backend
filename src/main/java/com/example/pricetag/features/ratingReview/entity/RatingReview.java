@@ -33,7 +33,6 @@ public class RatingReview extends BaseEntity {
             message = "Rating must be at most 5")
     private Double rating;
 
-
     @Column(name = "review",
             length = 2000)
     private String review;
