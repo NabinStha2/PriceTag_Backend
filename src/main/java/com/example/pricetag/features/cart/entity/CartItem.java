@@ -7,6 +7,20 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
+/**
+ * unitPrice is a SNAPSHOT, not a live read of Variants.actualPrice /
+ * discountedPrice. It's set explicitly by CartServiceImpl at write time
+ * (see resolveUnitPrice()) - this entity has no way to know the variant's
+ * current price on its own, it only knows what it was told.
+ * <p>
+ * Refresh policy (enforced in CartServiceImpl, not here):
+ * - addItem()            -> unitPrice IS refreshed to current price
+ * - updateItemQuantity() -> unitPrice is NOT touched, stays locked
+ * <p>
+ * totalPrice is derived automatically below and should never be set
+ * directly from the service layer - always go through quantity/unitPrice
+ * and let @PrePersist/@PreUpdate keep it correct.
+ */
 @Entity
 @Table(name = "cart_items",
         indexes = {@Index(name = "idx_cart_item_cart",
@@ -20,6 +34,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CartItem extends BaseEntity {
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id",
             nullable = false)
@@ -42,11 +57,9 @@ public class CartItem extends BaseEntity {
             nullable = false)
     private BigDecimal totalPrice;
 
-    // Helper method to calculate total price
     @PrePersist
     @PreUpdate
     public void calculateTotalPrice() {
         this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
-
     }
 }
