@@ -1,6 +1,7 @@
 package com.example.pricetag.features.cart.entity;
 
 import com.example.pricetag.entity.BaseEntity;
+import com.example.pricetag.enums.CartStatus;
 import com.example.pricetag.features.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -53,8 +54,4 @@ public class Cart extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private CartStatus status = CartStatus.ACTIVE;
-
-    public enum CartStatus {
-        ACTIVE, CHECKOUT, ABANDONED
-    }
 }

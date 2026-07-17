@@ -287,7 +287,7 @@ public class ProductServiceImpl implements ProductService {
                                              .toString());
 
         // Safely set primary image URL if available
-        List<com.example.pricetag.features.media.dto.response.MediaResponseDto> medias = mediaService.getmedias(
+        List<MediaResponseDto> medias = mediaService.getmedias(
                 savedProduct.getId(), EntityType.PRODUCT);
         if (medias != null && !medias.isEmpty()) {
             savedProduct.setPrimaryImageUrl(medias

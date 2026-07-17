@@ -25,6 +25,6 @@ public class CartController {
             @RequestBody
             AddCartItemRequestDto addCartItemRequestDto
                                                                 ) {
-        return ResponseEntity.ok(null);
+        return ResponseEntity.ok(cartService.addItemToCart(addCartItemRequestDto));
     }
 }
