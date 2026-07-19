@@ -3,12 +3,10 @@ package com.example.pricetag.features.cart.controller;
 
 import com.example.pricetag.dto.CommonResponseDto;
 import com.example.pricetag.features.cart.dto.requestDto.AddCartItemRequestDto;
+import com.example.pricetag.features.cart.dto.responseDto.CartResponseDto;
 import com.example.pricetag.features.cart.service.CartService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/cart")
@@ -23,8 +21,12 @@ public class CartController {
     @PostMapping("/items")
     public ResponseEntity<CommonResponseDto<Void>> addItemToCart(
             @RequestBody
-            AddCartItemRequestDto addCartItemRequestDto
-                                                                ) {
+            AddCartItemRequestDto addCartItemRequestDto) {
         return ResponseEntity.ok(cartService.addItemToCart(addCartItemRequestDto));
+    }
+
+    @GetMapping("/")
+    public ResponseEntity<CommonResponseDto<CartResponseDto>> getCart() {
+        return ResponseEntity.ok(cartService.getCart());
     }
 }

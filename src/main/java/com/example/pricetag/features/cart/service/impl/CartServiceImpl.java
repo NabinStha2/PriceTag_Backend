@@ -7,8 +7,11 @@ import com.example.pricetag.features.Variant.entity.Variants;
 import com.example.pricetag.features.Variant.repository.VariantRepo;
 import com.example.pricetag.features.auth.service.AuthService;
 import com.example.pricetag.features.cart.dto.requestDto.AddCartItemRequestDto;
+import com.example.pricetag.features.cart.dto.responseDto.CartItemResponseDto;
+import com.example.pricetag.features.cart.dto.responseDto.CartResponseDto;
 import com.example.pricetag.features.cart.entity.Cart;
 import com.example.pricetag.features.cart.entity.CartItem;
+import com.example.pricetag.features.cart.mapper.CartMapper;
 import com.example.pricetag.features.cart.repository.CartItemRepo;
 import com.example.pricetag.features.cart.repository.CartRepo;
 import com.example.pricetag.features.cart.service.CartService;
@@ -27,34 +30,22 @@ public class CartServiceImpl implements CartService {
     private final CartRepo cartRepo;
     private final VariantRepo variantRepo;
     private final CartItemRepo cartItemRepo;
+    private final CartMapper cartMapper;
 
     public CartServiceImpl(AuthService authService, CartRepo cartRepo, VariantRepo variantRepo,
-                           CartItemRepo cartItemRepo) {
+                           CartItemRepo cartItemRepo, CartMapper cartMapper) {
         this.authService = authService;
         this.cartRepo = cartRepo;
         this.variantRepo = variantRepo;
         this.cartItemRepo = cartItemRepo;
+        this.cartMapper = cartMapper;
     }
 
     @Override
     public CommonResponseDto<Void> addItemToCart(AddCartItemRequestDto addCartItemRequestDto) {
         User user = authService.getUser();
-        Cart existingCart = cartRepo
-                .findByUserId(user.getId())
-                .orElseGet(() -> {
-                    try {
-                        return cartRepo.saveAndFlush(Cart
-                                                             .builder()
-                                                             .user(user)
-                                                             .build());
-                    } catch (DataIntegrityViolationException e) {
-                        return cartRepo
-                                .findByUserId(user.getId())
-                                .orElseThrow(() -> new ApplicationException("409",
-                                                                            "Cart creation conflict. Please try again.",
-                                                                            HttpStatus.CONFLICT));
-                    }
-                });
+
+        Cart existingCart = getOrCreateCartSafely(user);
 
         if (existingCart.getStatus() == CartStatus.ABANDONED) {
             existingCart.setStatus(CartStatus.ACTIVE);
@@ -123,4 +114,54 @@ public class CartServiceImpl implements CartService {
                 .status(HttpStatus.CREATED.value())
                 .build();
     }
+
+    @Override
+    public CommonResponseDto<CartResponseDto> getCart() {
+        User user = authService.getUser();
+        Cart existingCart = getOrCreateCartSafely(user);
+
+        CartResponseDto cartResponseDto = cartMapper.cartToCartResponseDto(existingCart);
+
+        cartResponseDto.setCartTotal(cartResponseDto
+                                             .getItems()
+                                             .stream()
+                                             .map(CartItemResponseDto::getLineTotal)
+                                             .reduce(BigDecimal.ZERO, BigDecimal::add));
+        cartResponseDto.setTotalItemCount(cartResponseDto
+                                                  .getItems()
+                                                  .stream()
+                                                  .mapToInt(CartItemResponseDto::getQuantity)
+                                                  .sum());
+
+        return CommonResponseDto
+                .<CartResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .success(true)
+                .message("Cart fetched successfully")
+                .data(cartResponseDto)
+                .build();
+    }
+
+
+    // Helper Method
+    public Cart getOrCreateCartSafely(User user) {
+        return cartRepo
+                .findByUserId(user.getId())
+                .orElseGet(() -> {
+                    try {
+                        return cartRepo.saveAndFlush(Cart
+                                                             .builder()
+                                                             .user(user)
+                                                             .build());
+                    } catch (DataIntegrityViolationException e) {
+                        return cartRepo
+                                .findByUserId(user.getId())
+                                .orElseThrow(() -> new ApplicationException("409",
+                                                                            "Cart creation conflict. Please try again.",
+                                                                            HttpStatus.CONFLICT));
+                    }
+                });
+    }
 }
+
+
