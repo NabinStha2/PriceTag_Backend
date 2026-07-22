@@ -28,7 +28,7 @@ public class CartController {
         return ResponseEntity.ok(cartService.addItemToCart(addCartItemRequestDto));
     }
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<CommonResponseDto<CartResponseDto>> getCart() {
         return ResponseEntity.ok(cartService.getCart());
     }
@@ -43,5 +43,17 @@ public class CartController {
             UpdateCartItemQuantityRequestDto updateCartItemQuantityRequestDto) {
         return ResponseEntity.ok(
                 cartService.updateCartItemQuantity(itemId, updateCartItemQuantityRequestDto));
+    }
+
+    @DeleteMapping("/item/{itemId}")
+    public ResponseEntity<CommonResponseDto<CartResponseDto>> removeCartItem(
+            @PathVariable
+            Long itemId) {
+        return ResponseEntity.ok(cartService.removeCartItem(itemId));
+    }
+
+    @DeleteMapping
+    public ResponseEntity<CommonResponseDto<CartResponseDto>> clearCart() {
+        return ResponseEntity.ok(cartService.clearCart());
     }
 }

@@ -117,7 +117,7 @@ public class CartServiceImpl implements CartService {
         User user = authService.getUser();
         Cart existingCart = getOrCreateCartSafely(user);
 
-        CartResponseDto cartResponseDto = updateCartResponseData(existingCart);
+        CartResponseDto cartResponseDto = toCartResponseData(existingCart);
 
         return CommonResponseDto
                 .<CartResponseDto>builder()
@@ -170,7 +170,8 @@ public class CartServiceImpl implements CartService {
         existingCartItem.setTotalPrice(newUnitPrice.multiply(
                 BigDecimal.valueOf(updateCartItemQuantityRequestDto.getQuantity())));
 
-        CartResponseDto cartResponseDto = updateCartResponseData(existingCart);
+        CartResponseDto cartResponseDto = toCartResponseData(existingCart);
+
         return CommonResponseDto
                 .<CartResponseDto>builder()
                 .status(HttpStatus.OK.value())
@@ -179,6 +180,51 @@ public class CartServiceImpl implements CartService {
                 .data(cartResponseDto)
                 .build();
 
+    }
+
+    @Override
+    public CommonResponseDto<CartResponseDto> removeCartItem(Long itemId) {
+        User user = authService.getUser();
+        Cart existingCart = getOrCreateCartSafely(user);
+
+        checkCartStatus(existingCart);
+
+        CartItem existingCartItem = cartItemRepo
+                .findByIdAndCartId(itemId, existingCart.getId())
+                .orElseThrow(() -> new ApplicationException("404", "Cart Item not found",
+                                                            HttpStatus.NOT_FOUND));
+
+        existingCart
+                .getCartItems()
+                .remove(existingCartItem);
+
+        CartResponseDto cartResponseDto = toCartResponseData(existingCart);
+
+        return CommonResponseDto
+                .<CartResponseDto>builder()
+                .success(true)
+                .message("Cart Item removed successfully")
+                .status(HttpStatus.OK.value())
+                .data(cartResponseDto)
+                .build();
+    }
+
+    public CommonResponseDto<CartResponseDto> clearCart() {
+        User user = authService.getUser();
+        Cart cart = getOrCreateCartSafely(user);
+        checkCartStatus(cart);
+        cart
+                .getCartItems()
+                .clear();
+
+        CartResponseDto cartResponseDto = toCartResponseData(cart);
+        return CommonResponseDto
+                .<CartResponseDto>builder()
+                .success(true)
+                .message("All Cart Items are removed successfully")
+                .status(HttpStatus.OK.value())
+                .data(cartResponseDto)
+                .build();
     }
 
 
@@ -211,7 +257,7 @@ public class CartServiceImpl implements CartService {
         }
     }
 
-    public CartResponseDto updateCartResponseData(Cart cart) {
+    public CartResponseDto toCartResponseData(Cart cart) {
         CartResponseDto cartResponseDto = cartMapper.cartToCartResponseDto(cart);
 
         cartResponseDto.setCartTotal(cartResponseDto

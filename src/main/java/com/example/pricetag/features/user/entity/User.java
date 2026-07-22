@@ -1,9 +1,9 @@
 package com.example.pricetag.features.user.entity;
 
 import com.example.pricetag.entity.Address;
-import com.example.pricetag.entity.Order;
 import com.example.pricetag.features.auth.entity.Role;
 import com.example.pricetag.features.cart.entity.Cart;
+import com.example.pricetag.features.order.entity.Order;
 import com.example.pricetag.features.ratingReview.entity.RatingReview;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

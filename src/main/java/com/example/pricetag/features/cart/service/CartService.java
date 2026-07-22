@@ -11,9 +11,11 @@ public interface CartService {
 
     CommonResponseDto<CartResponseDto> getCart();
 
-    CommonResponseDto<CartResponseDto> updateCartItemQuantity(
-            Long itemId,
-            UpdateCartItemQuantityRequestDto updateCartItemQuantityRequestDto);
+    CommonResponseDto<CartResponseDto> updateCartItemQuantity(Long itemId,
+                                                              UpdateCartItemQuantityRequestDto updateCartItemQuantityRequestDto);
 
+    CommonResponseDto<CartResponseDto> removeCartItem(Long itemId);
+
+    CommonResponseDto<CartResponseDto> clearCart();
 }
 
