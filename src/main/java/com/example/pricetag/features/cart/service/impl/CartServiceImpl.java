@@ -7,6 +7,7 @@ import com.example.pricetag.features.Variant.entity.Variants;
 import com.example.pricetag.features.Variant.repository.VariantRepo;
 import com.example.pricetag.features.auth.service.AuthService;
 import com.example.pricetag.features.cart.dto.requestDto.AddCartItemRequestDto;
+import com.example.pricetag.features.cart.dto.requestDto.UpdateCartItemQuantityRequestDto;
 import com.example.pricetag.features.cart.dto.responseDto.CartItemResponseDto;
 import com.example.pricetag.features.cart.dto.responseDto.CartResponseDto;
 import com.example.pricetag.features.cart.entity.Cart;
@@ -47,12 +48,7 @@ public class CartServiceImpl implements CartService {
 
         Cart existingCart = getOrCreateCartSafely(user);
 
-        if (existingCart.getStatus() == CartStatus.ABANDONED) {
-            existingCart.setStatus(CartStatus.ACTIVE);
-        } else if (existingCart.getStatus() == CartStatus.CHECKOUT) {
-            throw new ApplicationException("409", "Cart is locked while checkout is in progress",
-                                           HttpStatus.CONFLICT);
-        }
+        checkCartStatus(existingCart);
 
         Variants existingVariant = variantRepo
                 .findByIdAndIsActiveTrue(addCartItemRequestDto.getVariantId())
@@ -116,22 +112,12 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CommonResponseDto<CartResponseDto> getCart() {
         User user = authService.getUser();
         Cart existingCart = getOrCreateCartSafely(user);
 
-        CartResponseDto cartResponseDto = cartMapper.cartToCartResponseDto(existingCart);
-
-        cartResponseDto.setCartTotal(cartResponseDto
-                                             .getItems()
-                                             .stream()
-                                             .map(CartItemResponseDto::getLineTotal)
-                                             .reduce(BigDecimal.ZERO, BigDecimal::add));
-        cartResponseDto.setTotalItemCount(cartResponseDto
-                                                  .getItems()
-                                                  .stream()
-                                                  .mapToInt(CartItemResponseDto::getQuantity)
-                                                  .sum());
+        CartResponseDto cartResponseDto = updateCartResponseData(existingCart);
 
         return CommonResponseDto
                 .<CartResponseDto>builder()
@@ -140,6 +126,59 @@ public class CartServiceImpl implements CartService {
                 .message("Cart fetched successfully")
                 .data(cartResponseDto)
                 .build();
+    }
+
+    @Override
+    public CommonResponseDto<CartResponseDto> updateCartItemQuantity(Long itemId,
+                                                                     UpdateCartItemQuantityRequestDto updateCartItemQuantityRequestDto) {
+
+        User user = authService.getUser();
+        Cart existingCart = getOrCreateCartSafely(user);
+
+        checkCartStatus(existingCart);
+
+        CartItem existingCartItem = cartItemRepo
+                .findByIdAndCartId(itemId, existingCart.getId())
+                .orElseThrow(() -> new ApplicationException("404", "Cart Item not found",
+                                                            HttpStatus.NOT_FOUND));
+
+        if (!existingCartItem
+                .getVariant()
+                .getIsActive()) {
+            throw new ApplicationException("400", "This product is no longer available",
+                                           HttpStatus.BAD_REQUEST);
+        }
+        if (updateCartItemQuantityRequestDto.getQuantity() > existingCartItem
+                .getVariant()
+                .getStockQuantity()) {
+            throw new ApplicationException("400", "Only " + existingCartItem
+                    .getVariant()
+                    .getStockQuantity() + " left in stock", HttpStatus.BAD_REQUEST);
+        }
+
+        BigDecimal newUnitPrice = existingCartItem
+                                          .getVariant()
+                                          .getDiscountedPrice() != null ? existingCartItem
+                                                                          .getVariant()
+                                                                          .getDiscountedPrice() :
+                                  existingCartItem
+                                  .getVariant()
+                                  .getActualPrice();
+
+        existingCartItem.setQuantity(updateCartItemQuantityRequestDto.getQuantity());
+        existingCartItem.setUnitPrice(newUnitPrice);
+        existingCartItem.setTotalPrice(newUnitPrice.multiply(
+                BigDecimal.valueOf(updateCartItemQuantityRequestDto.getQuantity())));
+
+        CartResponseDto cartResponseDto = updateCartResponseData(existingCart);
+        return CommonResponseDto
+                .<CartResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .success(true)
+                .message("Cart Item updated successfully")
+                .data(cartResponseDto)
+                .build();
+
     }
 
 
@@ -161,6 +200,32 @@ public class CartServiceImpl implements CartService {
                                                                             HttpStatus.CONFLICT));
                     }
                 });
+    }
+
+    public void checkCartStatus(Cart cart) {
+        if (cart.getStatus() == CartStatus.CHECKOUT) {
+            throw new ApplicationException("409", "Cart is locked while checkout is in progress",
+                                           HttpStatus.CONFLICT);
+        } else if (cart.getStatus() == CartStatus.ABANDONED) {
+            cart.setStatus(CartStatus.ACTIVE);
+        }
+    }
+
+    public CartResponseDto updateCartResponseData(Cart cart) {
+        CartResponseDto cartResponseDto = cartMapper.cartToCartResponseDto(cart);
+
+        cartResponseDto.setCartTotal(cartResponseDto
+                                             .getItems()
+                                             .stream()
+                                             .map(CartItemResponseDto::getLineTotal)
+                                             .reduce(BigDecimal.ZERO, BigDecimal::add));
+        cartResponseDto.setTotalItemCount(cartResponseDto
+                                                  .getItems()
+                                                  .stream()
+                                                  .mapToInt(CartItemResponseDto::getQuantity)
+                                                  .sum());
+
+        return cartResponseDto;
     }
 }
 
