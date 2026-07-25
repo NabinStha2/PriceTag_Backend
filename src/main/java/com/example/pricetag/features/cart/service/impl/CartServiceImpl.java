@@ -112,7 +112,6 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public CommonResponseDto<CartResponseDto> getCart() {
         User user = authService.getUser();
         Cart existingCart = getOrCreateCartSafely(user);

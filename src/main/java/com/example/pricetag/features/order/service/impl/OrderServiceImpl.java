@@ -1,28 +1,12 @@
 package com.example.pricetag.features.order.service.impl;
 
-import com.example.pricetag.features.auth.service.AuthService;
-import com.example.pricetag.features.cart.repository.CartItemRepo;
-import com.example.pricetag.features.order.repository.OrderRepo;
 import com.example.pricetag.features.order.service.OrderService;
-import com.example.pricetag.features.product.repository.ProductRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
 public class OrderServiceImpl implements OrderService {
-    private final OrderRepo orderRepo;
-    private final AuthService authService;
-    private final ProductRepo productRepo;
-    private final CartItemRepo cartItemRepo;
-
-    public OrderServiceImpl(OrderRepo orderRepo, AuthService authService, ProductRepo productRepo,
-                            CartItemRepo cartItemRepo) {
-        this.orderRepo = orderRepo;
-        this.authService = authService;
-        this.productRepo = productRepo;
-        this.cartItemRepo = cartItemRepo;
-    }
 
 //    @Override
 //    public CommonResponseDto createOrder() {
