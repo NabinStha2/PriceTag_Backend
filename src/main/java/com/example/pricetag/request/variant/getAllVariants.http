@@ -1,0 +1,3 @@
+GET {{host}}/api/v1/variant/
+Content-Type: application/json
+Authorization: Bearer {{token}}

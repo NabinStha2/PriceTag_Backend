@@ -1,0 +1,8 @@
+POST {{host}}/api/v1/cart/items
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "quantity": 10,
+  "variantId": 9
+}
