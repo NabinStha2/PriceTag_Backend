@@ -32,5 +32,6 @@ build/
 ### VS Code ###
 .vscode/
 
+.junie/
 .env
 src/main/java/com/example/pricetag/request
