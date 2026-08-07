@@ -1,4 +1,4 @@
-package com.example.pricetag.dto;
+package com.example.pricetag.features.address.dto.requestDto;
 
 import lombok.*;
 

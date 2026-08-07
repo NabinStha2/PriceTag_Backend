@@ -1,7 +1,7 @@
-package com.example.pricetag.services;
+package com.example.pricetag.features.address.service;
 
-import com.example.pricetag.dto.AddressDto;
 import com.example.pricetag.dto.CommonResponseDto;
+import com.example.pricetag.features.address.dto.requestDto.AddressDto;
 import org.springframework.stereotype.Service;
 
 @Service

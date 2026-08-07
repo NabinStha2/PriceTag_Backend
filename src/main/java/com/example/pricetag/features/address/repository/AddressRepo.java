@@ -1,10 +1,12 @@
-package com.example.pricetag.repository;
+package com.example.pricetag.features.address.repository;
 
-import com.example.pricetag.entity.Address;
+import com.example.pricetag.features.address.entity.Address;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface AddressRepo extends JpaRepository<Address, Long> {
-
+    List<Address> findAllByUserId(Long userId);
 }

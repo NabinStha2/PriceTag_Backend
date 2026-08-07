@@ -1,6 +1,6 @@
 package com.example.pricetag.features.user.dto.responseDto;
 
-import com.example.pricetag.entity.Address;
+import com.example.pricetag.features.address.entity.Address;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

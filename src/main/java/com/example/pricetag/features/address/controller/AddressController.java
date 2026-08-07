@@ -1,8 +1,8 @@
-package com.example.pricetag.controllers;
+package com.example.pricetag.features.address.controller;
 
-import com.example.pricetag.dto.AddressDto;
 import com.example.pricetag.dto.CommonResponseDto;
-import com.example.pricetag.services.AddressService;
+import com.example.pricetag.features.address.dto.requestDto.AddressDto;
+import com.example.pricetag.features.address.service.AddressService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +18,9 @@ public class AddressController {
 
 
     @PostMapping
-    private ResponseEntity<CommonResponseDto> createAddress(@RequestBody AddressDto addressDto) {
+    private ResponseEntity<CommonResponseDto> createAddress(
+            @RequestBody
+            AddressDto addressDto) {
         return ResponseEntity.ok(addressService.createAddress(addressDto));
     }
 

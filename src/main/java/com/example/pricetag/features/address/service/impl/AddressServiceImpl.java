@@ -1,13 +1,13 @@
-package com.example.pricetag.services.impl;
+package com.example.pricetag.features.address.service.impl;
 
-import com.example.pricetag.dto.AddressDto;
 import com.example.pricetag.dto.CommonResponseDto;
-import com.example.pricetag.entity.Address;
 import com.example.pricetag.exceptions.ApplicationException;
+import com.example.pricetag.features.address.dto.requestDto.AddressDto;
+import com.example.pricetag.features.address.entity.Address;
+import com.example.pricetag.features.address.service.AddressService;
 import com.example.pricetag.features.auth.service.AuthService;
 import com.example.pricetag.features.user.entity.User;
 import com.example.pricetag.features.user.repository.UserRepo;
-import com.example.pricetag.services.AddressService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

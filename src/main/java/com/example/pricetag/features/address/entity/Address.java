@@ -1,13 +1,10 @@
-package com.example.pricetag.entity;
+package com.example.pricetag.features.address.entity;
 
+import com.example.pricetag.entity.BaseEntity;
 import com.example.pricetag.features.user.entity.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
 
 @Builder
 @Entity
@@ -20,11 +17,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Address {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Address extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id",
@@ -73,14 +66,4 @@ public class Address {
     )
     @Builder.Default
     private Boolean isDefault = false;
-
-    @CreationTimestamp
-    @Column(updatable = false,
-            name = "created_at"
-    )
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 }
