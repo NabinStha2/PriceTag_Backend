@@ -1,14 +1,21 @@
 package com.example.pricetag.features.address.service;
 
 import com.example.pricetag.dto.CommonResponseDto;
-import com.example.pricetag.features.address.dto.requestDto.AddressDto;
-import org.springframework.stereotype.Service;
+import com.example.pricetag.features.address.dto.requestDto.AddressResponseDto;
 
-@Service
+import java.util.List;
+
 public interface AddressService {
 
-    CommonResponseDto createAddress(AddressDto addressDto);
+    CommonResponseDto<List<AddressResponseDto>> createAddress(
+            AddressResponseDto addressResponseDto);
 
-    CommonResponseDto getAddress();
+    CommonResponseDto<List<AddressResponseDto>> getAddress();
 
+    CommonResponseDto<List<AddressResponseDto>> updateAddress(Long id,
+                                                              AddressResponseDto addressResponseDto);
+
+    CommonResponseDto<List<AddressResponseDto>> deleteAddress(Long id);
+
+    CommonResponseDto<List<AddressResponseDto>> setDefaultAddress(Long id);
 }
