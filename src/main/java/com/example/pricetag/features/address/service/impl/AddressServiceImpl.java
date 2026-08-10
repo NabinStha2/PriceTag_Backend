@@ -39,7 +39,11 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public CommonResponseDto<List<AddressResponseDto>> createAddress(
             AddressRequestDto addressRequestDto) {
-        User user = authService.getUser();
+        User authenticatedUser = authService.getUser();
+        User user = userRepo
+                .findByIdForUpdate(authenticatedUser.getId())
+                .orElseThrow(() -> new ApplicationException("404", "User not found",
+                                                            HttpStatus.NOT_FOUND));
 
         try {
             Address address = addressMapper.mapAddressRequestDtoToAddress(addressRequestDto);
@@ -69,7 +73,7 @@ public class AddressServiceImpl implements AddressService {
             existingAddresses.add(address);
             userRepo.save(user);
 
-            List<AddressResponseDto> addressRequestDtos = existingAddresses
+            List<AddressResponseDto> addressResponseDtos = existingAddresses
                     .stream()
                     .map(addressMapper::mapAddressToAddressResponseDto)
                     .toList();
@@ -77,7 +81,7 @@ public class AddressServiceImpl implements AddressService {
             return CommonResponseDto
                     .<List<AddressResponseDto>>builder()
                     .success(true)
-                    .data(addressRequestDtos)
+                    .data(addressResponseDtos)
                     .message("Address created successfully")
                     .build();
         } catch (DataAccessException e) {
@@ -127,6 +131,8 @@ public class AddressServiceImpl implements AddressService {
         }
 
         try {
+            address.setUnitNumber(addressRequestDto.getUnitNumber());
+            address.setStreetNumber(addressRequestDto.getStreetNumber());
             address.setStreet(addressRequestDto.getStreet());
             address.setCity(addressRequestDto.getCity());
             address.setState(addressRequestDto.getState());

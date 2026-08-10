@@ -5,6 +5,7 @@ import com.example.pricetag.features.address.dto.request.AddressRequestDto;
 import com.example.pricetag.features.address.dto.response.AddressResponseDto;
 import com.example.pricetag.features.address.service.AddressService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +26,9 @@ public class AddressController {
             @Valid
             @RequestBody
             AddressRequestDto addressRequestDto) {
-        return ResponseEntity.ok(addressService.createAddress(addressRequestDto));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(addressService.createAddress(addressRequestDto));
     }
 
     @GetMapping

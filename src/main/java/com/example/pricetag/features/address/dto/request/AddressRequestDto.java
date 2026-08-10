@@ -13,6 +13,14 @@ public class AddressRequestDto {
 
     private Long id;
 
+    @Size(max = 50,
+            message = "Unit number cannot exceed 50 characters")
+    private String unitNumber;
+
+    @Size(max = 50,
+            message = "Street number cannot exceed 50 characters")
+    private String streetNumber;
+
     @NotBlank(message = "Street is required")
     @Size(max = 150,
             message = "Street cannot exceed 150 characters")
