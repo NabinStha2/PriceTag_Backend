@@ -169,41 +169,34 @@ public class AddressServiceImpl implements AddressService {
                                            HttpStatus.FORBIDDEN);
         }
 
-        try {
-            boolean wasDefault = Boolean.TRUE.equals(address.getIsDefault());
+        boolean wasDefault = Boolean.TRUE.equals(address.getIsDefault());
 
+        user
+                .getAddresses()
+                .remove(address);
+//        address.setUser(null);
+
+        if (wasDefault && !user
+                .getAddresses()
+                .isEmpty()) {
             user
                     .getAddresses()
-                    .remove(address);
-            address.setUser(null);
-            userRepo.save(user);
-
-            if (wasDefault && !user
-                    .getAddresses()
-                    .isEmpty()) {
-                Address newDefault = user
-                        .getAddresses()
-                        .getFirst();
-                newDefault.setIsDefault(true);
-                addressRepo.save(newDefault);
-            }
-
-            List<AddressResponseDto> addressResponseDtos = user
-                    .getAddresses()
-                    .stream()
-                    .map(addressMapper::mapAddressToAddressResponseDto)
-                    .toList();
-
-            return CommonResponseDto
-                    .<List<AddressResponseDto>>builder()
-                    .success(true)
-                    .data(addressResponseDtos)
-                    .message("Address deleted successfully")
-                    .build();
-        } catch (DataAccessException e) {
-            throw new ApplicationException("500", "Address deletion failed",
-                                           HttpStatus.INTERNAL_SERVER_ERROR);
+                    .getFirst()
+                    .setIsDefault(true);
         }
+
+        List<AddressResponseDto> addressResponseDtos = user
+                .getAddresses()
+                .stream()
+                .map(addressMapper::mapAddressToAddressResponseDto)
+                .toList();
+
+        return CommonResponseDto
+                .<List<AddressResponseDto>>builder()
+                .success(true)
+                .data(addressResponseDtos)
+                .message("Address deleted successfully")
+                .build();
     }
 
     @Override

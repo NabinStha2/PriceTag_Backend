@@ -71,6 +71,7 @@ public class User {
             cascade = CascadeType.ALL,
             orphanRemoval = true,
             fetch = FetchType.LAZY)
+    @OrderBy("createdAt ASC, id ASC")
     @Builder.Default
     private List<Address> addresses = new ArrayList<>();
 
@@ -78,11 +79,13 @@ public class User {
             cascade = CascadeType.ALL,
             orphanRemoval = true,
             fetch = FetchType.LAZY)
+    @OrderBy("createdAt ASC, id ASC")
     @Builder.Default
     private List<RatingReview> ratingReviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "user",
             fetch = FetchType.LAZY)
+    @OrderBy("createdAt ASC, id ASC")
     @Builder.Default
     private List<Order> orders = new ArrayList<>();
 
