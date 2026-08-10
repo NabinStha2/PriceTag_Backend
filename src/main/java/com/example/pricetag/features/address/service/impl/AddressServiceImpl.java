@@ -109,8 +109,8 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public CommonResponseDto<List<AddressResponseDto>> updateAddress(Long id,
-                                                                     AddressRequestDto addressRequestDto) {
+    public CommonResponseDto<AddressResponseDto> updateAddress(Long id,
+                                                               AddressRequestDto addressRequestDto) {
         User user = authService.getUser();
         Address address = addressRepo
                 .findById(id)
@@ -125,48 +125,32 @@ public class AddressServiceImpl implements AddressService {
                                            HttpStatus.FORBIDDEN);
         }
 
-        try {
-            address.setUnitNumber(addressRequestDto.getUnitNumber());
-            address.setStreetNumber(addressRequestDto.getStreetNumber());
-            address.setStreet(addressRequestDto.getStreet());
-            address.setCity(addressRequestDto.getCity());
-            address.setState(addressRequestDto.getState());
-            address.setCountry(addressRequestDto.getCountry());
-            address.setPostalCode(addressRequestDto.getPostalCode());
-            address.setLabel(addressRequestDto.getLabel());
+        addressMapper.updateAddressFromRequestDto(addressRequestDto, address);
 
-            if (Boolean.TRUE.equals(addressRequestDto.getIsDefault()) &&
-                !Boolean.TRUE.equals(address.getIsDefault())) {
-                List<Address> existingAddresses = user.getAddresses();
-                for (Address existing : existingAddresses) {
-                    if (!existing
-                            .getId()
-                            .equals(address.getId()) &&
-                        Boolean.TRUE.equals(existing.getIsDefault())) {
-                        existing.setIsDefault(false);
-                    }
+        if (Boolean.TRUE.equals(addressRequestDto.getIsDefault()) &&
+            !Boolean.TRUE.equals(address.getIsDefault())) {
+            List<Address> existingAddresses = user.getAddresses();
+            for (Address existing : existingAddresses) {
+                if (!existing
+                        .getId()
+                        .equals(address.getId()) && Boolean.TRUE.equals(existing.getIsDefault())) {
+                    existing.setIsDefault(false);
                 }
-                address.setIsDefault(true);
             }
-
-            addressRepo.save(address);
-
-            List<AddressResponseDto> addressResponseDtos = user
-                    .getAddresses()
-                    .stream()
-                    .map(addressMapper::mapAddressToAddressResponseDto)
-                    .toList();
-
-            return CommonResponseDto
-                    .<List<AddressResponseDto>>builder()
-                    .success(true)
-                    .data(addressResponseDtos)
-                    .message("Address updated successfully")
-                    .build();
-        } catch (DataAccessException e) {
-            throw new ApplicationException("500", "Address update failed",
-                                           HttpStatus.INTERNAL_SERVER_ERROR);
+            address.setIsDefault(true);
         }
+
+        addressRepo.save(address);
+
+        AddressResponseDto addressResponseDto = addressMapper.mapAddressToAddressResponseDto(
+                address);
+
+        return CommonResponseDto
+                .<AddressResponseDto>builder()
+                .success(true)
+                .data(addressResponseDto)
+                .message("Address updated successfully")
+                .build();
     }
 
     @Override

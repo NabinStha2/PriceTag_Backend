@@ -2,6 +2,8 @@ package com.example.pricetag.features.address.dto.response;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Builder
 @Getter
 @Setter
@@ -28,4 +30,8 @@ public class AddressResponseDto {
     private String label;
 
     private Boolean isDefault;
+
+    private LocalDateTime createdAt;
+    
+    private LocalDateTime updatedAt;
 }

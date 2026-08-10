@@ -13,8 +13,8 @@ public interface AddressService {
 
     CommonResponseDto<List<AddressResponseDto>> getAddress();
 
-    CommonResponseDto<List<AddressResponseDto>> updateAddress(Long id,
-                                                              AddressRequestDto addressRequestDto);
+    CommonResponseDto<AddressResponseDto> updateAddress(Long id,
+                                                        AddressRequestDto addressRequestDto);
 
     CommonResponseDto<List<AddressResponseDto>> deleteAddress(Long id);
 

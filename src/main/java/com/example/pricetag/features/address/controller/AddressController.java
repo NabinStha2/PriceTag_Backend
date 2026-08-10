@@ -38,11 +38,10 @@ public class AddressController {
                 .body(addressService.getAddress());
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<CommonResponseDto<List<AddressResponseDto>>> updateAddress(
+    @PatchMapping("/{id}")
+    public ResponseEntity<CommonResponseDto<AddressResponseDto>> updateAddress(
             @PathVariable
             Long id,
-            @Valid
             @RequestBody
             AddressRequestDto addressRequestDto) {
         return ResponseEntity.ok(addressService.updateAddress(id, addressRequestDto));
