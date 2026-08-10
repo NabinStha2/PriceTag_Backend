@@ -71,7 +71,7 @@ public class AddressServiceImpl implements AddressService {
             }
 
             existingAddresses.add(address);
-            userRepo.save(user);
+            addressRepo.saveAndFlush(address);
 
             List<AddressResponseDto> addressResponseDtos = existingAddresses
                     .stream()
