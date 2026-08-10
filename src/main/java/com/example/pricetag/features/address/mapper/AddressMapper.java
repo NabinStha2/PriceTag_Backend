@@ -1,6 +1,7 @@
 package com.example.pricetag.features.address.mapper;
 
-import com.example.pricetag.features.address.dto.requestDto.AddressResponseDto;
+import com.example.pricetag.features.address.dto.request.AddressRequestDto;
+import com.example.pricetag.features.address.dto.response.AddressResponseDto;
 import com.example.pricetag.features.address.entity.Address;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
@@ -8,7 +9,7 @@ import org.mapstruct.MappingConstants;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface AddressMapper {
 
-    Address toEntity(AddressResponseDto dto);
+    Address mapAddressRequestDtoToAddress(AddressRequestDto addressRequestDto);
 
-    AddressResponseDto toDto(Address entity);
+    AddressResponseDto mapAddressToAddressResponseDto(Address address);
 }

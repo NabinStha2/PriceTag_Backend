@@ -1,7 +1,8 @@
 package com.example.pricetag.features.address.controller;
 
 import com.example.pricetag.dto.CommonResponseDto;
-import com.example.pricetag.features.address.dto.requestDto.AddressResponseDto;
+import com.example.pricetag.features.address.dto.request.AddressRequestDto;
+import com.example.pricetag.features.address.dto.response.AddressResponseDto;
 import com.example.pricetag.features.address.service.AddressService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +24,8 @@ public class AddressController {
     public ResponseEntity<CommonResponseDto<List<AddressResponseDto>>> createAddress(
             @Valid
             @RequestBody
-            AddressResponseDto addressResponseDto) {
-        return ResponseEntity.ok(addressService.createAddress(addressResponseDto));
+            AddressRequestDto addressRequestDto) {
+        return ResponseEntity.ok(addressService.createAddress(addressRequestDto));
     }
 
     @GetMapping
@@ -38,8 +39,8 @@ public class AddressController {
             Long id,
             @Valid
             @RequestBody
-            AddressResponseDto addressResponseDto) {
-        return ResponseEntity.ok(addressService.updateAddress(id, addressResponseDto));
+            AddressRequestDto addressRequestDto) {
+        return ResponseEntity.ok(addressService.updateAddress(id, addressRequestDto));
     }
 
     @DeleteMapping("/{id}")

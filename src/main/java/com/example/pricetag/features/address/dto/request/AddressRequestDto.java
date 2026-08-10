@@ -1,4 +1,4 @@
-package com.example.pricetag.features.address.dto.requestDto;
+package com.example.pricetag.features.address.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -9,7 +9,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AddressResponseDto {
+public class AddressRequestDto {
 
     private Long id;
 

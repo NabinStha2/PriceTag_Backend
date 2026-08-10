@@ -2,7 +2,8 @@ package com.example.pricetag.features.address.service.impl;
 
 import com.example.pricetag.dto.CommonResponseDto;
 import com.example.pricetag.exceptions.ApplicationException;
-import com.example.pricetag.features.address.dto.requestDto.AddressResponseDto;
+import com.example.pricetag.features.address.dto.request.AddressRequestDto;
+import com.example.pricetag.features.address.dto.response.AddressResponseDto;
 import com.example.pricetag.features.address.entity.Address;
 import com.example.pricetag.features.address.mapper.AddressMapper;
 import com.example.pricetag.features.address.repository.AddressRepo;
@@ -37,11 +38,11 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public CommonResponseDto<List<AddressResponseDto>> createAddress(
-            AddressResponseDto addressResponseDto) {
+            AddressRequestDto addressRequestDto) {
         User user = authService.getUser();
 
         try {
-            Address address = addressMapper.toEntity(addressResponseDto);
+            Address address = addressMapper.mapAddressRequestDtoToAddress(addressRequestDto);
             address.setUser(user);
 
             List<Address> existingAddresses = user.getAddresses();
@@ -52,7 +53,7 @@ public class AddressServiceImpl implements AddressService {
 
             boolean isFirstAddress = existingAddresses.isEmpty();
             boolean shouldBeDefault =
-                    isFirstAddress || Boolean.TRUE.equals(addressResponseDto.getIsDefault());
+                    isFirstAddress || Boolean.TRUE.equals(addressRequestDto.getIsDefault());
 
             if (shouldBeDefault) {
                 for (Address existing : existingAddresses) {
@@ -68,15 +69,15 @@ public class AddressServiceImpl implements AddressService {
             existingAddresses.add(address);
             userRepo.save(user);
 
-            List<AddressResponseDto> addressResponseDtos = existingAddresses
+            List<AddressResponseDto> addressRequestDtos = existingAddresses
                     .stream()
-                    .map(addressMapper::toDto)
+                    .map(addressMapper::mapAddressToAddressResponseDto)
                     .toList();
 
             return CommonResponseDto
                     .<List<AddressResponseDto>>builder()
                     .success(true)
-                    .data(addressResponseDtos)
+                    .data(addressRequestDtos)
                     .message("Address created successfully")
                     .build();
         } catch (DataAccessException e) {
@@ -97,7 +98,7 @@ public class AddressServiceImpl implements AddressService {
 
         List<AddressResponseDto> addressResponseDtos = addresses
                 .stream()
-                .map(addressMapper::toDto)
+                .map(addressMapper::mapAddressToAddressResponseDto)
                 .toList();
 
         return CommonResponseDto
@@ -110,7 +111,7 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public CommonResponseDto<List<AddressResponseDto>> updateAddress(Long id,
-                                                                     AddressResponseDto addressResponseDto) {
+                                                                     AddressRequestDto addressRequestDto) {
         User user = authService.getUser();
         Address address = addressRepo
                 .findById(id)
@@ -126,14 +127,14 @@ public class AddressServiceImpl implements AddressService {
         }
 
         try {
-            address.setStreet(addressResponseDto.getStreet());
-            address.setCity(addressResponseDto.getCity());
-            address.setState(addressResponseDto.getState());
-            address.setCountry(addressResponseDto.getCountry());
-            address.setPostalCode(addressResponseDto.getPostalCode());
-            address.setLabel(addressResponseDto.getLabel());
+            address.setStreet(addressRequestDto.getStreet());
+            address.setCity(addressRequestDto.getCity());
+            address.setState(addressRequestDto.getState());
+            address.setCountry(addressRequestDto.getCountry());
+            address.setPostalCode(addressRequestDto.getPostalCode());
+            address.setLabel(addressRequestDto.getLabel());
 
-            if (Boolean.TRUE.equals(addressResponseDto.getIsDefault()) &&
+            if (Boolean.TRUE.equals(addressRequestDto.getIsDefault()) &&
                 !Boolean.TRUE.equals(address.getIsDefault())) {
                 List<Address> existingAddresses = user.getAddresses();
                 for (Address existing : existingAddresses) {
@@ -152,7 +153,7 @@ public class AddressServiceImpl implements AddressService {
             List<AddressResponseDto> addressResponseDtos = user
                     .getAddresses()
                     .stream()
-                    .map(addressMapper::toDto)
+                    .map(addressMapper::mapAddressToAddressResponseDto)
                     .toList();
 
             return CommonResponseDto
@@ -205,7 +206,7 @@ public class AddressServiceImpl implements AddressService {
             List<AddressResponseDto> addressResponseDtos = user
                     .getAddresses()
                     .stream()
-                    .map(addressMapper::toDto)
+                    .map(addressMapper::mapAddressToAddressResponseDto)
                     .toList();
 
             return CommonResponseDto
@@ -252,7 +253,7 @@ public class AddressServiceImpl implements AddressService {
 
             List<AddressResponseDto> addressResponseDtos = existingAddresses
                     .stream()
-                    .map(addressMapper::toDto)
+                    .map(addressMapper::mapAddressToAddressResponseDto)
                     .toList();
 
             return CommonResponseDto
