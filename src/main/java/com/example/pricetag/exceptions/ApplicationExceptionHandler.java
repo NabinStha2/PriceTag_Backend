@@ -4,6 +4,7 @@ import com.example.pricetag.dto.CommonResponseDto;
 import com.example.pricetag.utils.ColorLogger;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -61,6 +62,16 @@ public class ApplicationExceptionHandler {
                 "Validation failed for the request. Please check the errors and try again.",
                 HttpStatus.BAD_REQUEST, validationErrors, exception, request),
                                     HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<CommonResponseDto<Void>> handleDataAccessException(
+            DataAccessException exception, HttpServletRequest request) {
+
+        return new ResponseEntity<>(
+                buildErrorResponse("A database operation failed. Please try again.",
+                                   HttpStatus.INTERNAL_SERVER_ERROR, exception, request),
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private CommonResponseDto<Void> buildErrorResponse(String message, HttpStatus status,

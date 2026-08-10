@@ -45,49 +45,44 @@ public class AddressServiceImpl implements AddressService {
                 .orElseThrow(() -> new ApplicationException("404", "User not found",
                                                             HttpStatus.NOT_FOUND));
 
-        try {
-            Address address = addressMapper.mapAddressRequestDtoToAddress(addressRequestDto);
-            address.setUser(user);
+        Address address = addressMapper.mapAddressRequestDtoToAddress(addressRequestDto);
+        address.setUser(user);
 
-            List<Address> existingAddresses = user.getAddresses();
-            if (existingAddresses == null) {
-                existingAddresses = new ArrayList<>();
-                user.setAddresses(existingAddresses);
-            }
-
-            boolean isFirstAddress = existingAddresses.isEmpty();
-            boolean shouldBeDefault =
-                    isFirstAddress || Boolean.TRUE.equals(addressRequestDto.getIsDefault());
-
-            if (shouldBeDefault) {
-                for (Address existing : existingAddresses) {
-                    if (Boolean.TRUE.equals(existing.getIsDefault())) {
-                        existing.setIsDefault(false);
-                    }
-                }
-                address.setIsDefault(true);
-            } else {
-                address.setIsDefault(false);
-            }
-
-            existingAddresses.add(address);
-            addressRepo.saveAndFlush(address);
-
-            List<AddressResponseDto> addressResponseDtos = existingAddresses
-                    .stream()
-                    .map(addressMapper::mapAddressToAddressResponseDto)
-                    .toList();
-
-            return CommonResponseDto
-                    .<List<AddressResponseDto>>builder()
-                    .success(true)
-                    .data(addressResponseDtos)
-                    .message("Address created successfully")
-                    .build();
-        } catch (DataAccessException e) {
-            throw new ApplicationException("500", "Address creation failed",
-                                           HttpStatus.INTERNAL_SERVER_ERROR);
+        List<Address> existingAddresses = user.getAddresses();
+        if (existingAddresses == null) {
+            existingAddresses = new ArrayList<>();
+            user.setAddresses(existingAddresses);
         }
+
+        boolean isFirstAddress = existingAddresses.isEmpty();
+        boolean shouldBeDefault =
+                isFirstAddress || Boolean.TRUE.equals(addressRequestDto.getIsDefault());
+
+        if (shouldBeDefault) {
+            for (Address existing : existingAddresses) {
+                if (Boolean.TRUE.equals(existing.getIsDefault())) {
+                    existing.setIsDefault(false);
+                }
+            }
+            address.setIsDefault(true);
+        } else {
+            address.setIsDefault(false);
+        }
+
+        existingAddresses.add(address);
+        addressRepo.save(address);
+
+        List<AddressResponseDto> addressResponseDtos = existingAddresses
+                .stream()
+                .map(addressMapper::mapAddressToAddressResponseDto)
+                .toList();
+
+        return CommonResponseDto
+                .<List<AddressResponseDto>>builder()
+                .success(true)
+                .data(addressResponseDtos)
+                .message("Address created successfully")
+                .build();
     }
 
     @Override

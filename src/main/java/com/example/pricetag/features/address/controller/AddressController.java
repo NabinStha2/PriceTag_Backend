@@ -33,7 +33,9 @@ public class AddressController {
 
     @GetMapping
     public ResponseEntity<CommonResponseDto<List<AddressResponseDto>>> getAddress() {
-        return ResponseEntity.ok(addressService.getAddress());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(addressService.getAddress());
     }
 
     @PutMapping("/{id}")
