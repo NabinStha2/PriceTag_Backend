@@ -55,7 +55,7 @@ public class AddressController {
     }
 
     @PatchMapping("/{id}/default")
-    public ResponseEntity<CommonResponseDto<List<AddressResponseDto>>> setDefaultAddress(
+    public ResponseEntity<CommonResponseDto<AddressResponseDto>> setDefaultAddress(
             @PathVariable
             Long id) {
         return ResponseEntity.ok(addressService.setDefaultAddress(id));

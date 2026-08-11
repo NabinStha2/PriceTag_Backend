@@ -8,8 +8,7 @@ import java.util.List;
 
 public interface AddressService {
 
-    CommonResponseDto<List<AddressResponseDto>> createAddress(
-            AddressRequestDto addressRequestDto);
+    CommonResponseDto<List<AddressResponseDto>> createAddress(AddressRequestDto addressRequestDto);
 
     CommonResponseDto<List<AddressResponseDto>> getAddress();
 
@@ -18,5 +17,5 @@ public interface AddressService {
 
     CommonResponseDto<List<AddressResponseDto>> deleteAddress(Long id);
 
-    CommonResponseDto<List<AddressResponseDto>> setDefaultAddress(Long id);
+    CommonResponseDto<AddressResponseDto> setDefaultAddress(Long id);
 }

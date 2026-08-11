@@ -199,7 +199,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public CommonResponseDto<List<AddressResponseDto>> setDefaultAddress(Long id) {
+    public CommonResponseDto<AddressResponseDto> setDefaultAddress(Long id) {
         User authenticatedUser = authService.getUser();
         User user = userRepo
                 .findByIdForUpdate(authenticatedUser.getId())
@@ -228,16 +228,19 @@ public class AddressServiceImpl implements AddressService {
                 existing.setIsDefault(false);
             }
         }
-        
-        List<AddressResponseDto> addressResponseDtos = existingAddresses
-                .stream()
-                .map(addressMapper::mapAddressToAddressResponseDto)
-                .toList();
+
+//        List<AddressResponseDto> addressResponseDtos = existingAddresses
+//                .stream()
+//                .map(addressMapper::mapAddressToAddressResponseDto)
+//                .toList();
+
+        AddressResponseDto defaultAddressDto = addressMapper.mapAddressToAddressResponseDto(
+                address);
 
         return CommonResponseDto
-                .<List<AddressResponseDto>>builder()
+                .<AddressResponseDto>builder()
                 .success(true)
-                .data(addressResponseDtos)
+                .data(defaultAddressDto)
                 .message("Default address set successfully")
                 .build();
     }
