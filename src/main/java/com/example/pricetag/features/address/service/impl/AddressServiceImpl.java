@@ -11,7 +11,6 @@ import com.example.pricetag.features.address.service.AddressService;
 import com.example.pricetag.features.auth.service.AuthService;
 import com.example.pricetag.features.user.entity.User;
 import com.example.pricetag.features.user.repository.UserRepo;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -201,7 +200,11 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public CommonResponseDto<List<AddressResponseDto>> setDefaultAddress(Long id) {
-        User user = authService.getUser();
+        User authenticatedUser = authService.getUser();
+        User user = userRepo
+                .findByIdForUpdate(authenticatedUser.getId())
+                .orElseThrow(() -> new ApplicationException("404", "User not found",
+                                                            HttpStatus.NOT_FOUND));
         Address address = addressRepo
                 .findById(id)
                 .orElseThrow(() -> new ApplicationException("404", "Address not found",
@@ -215,34 +218,27 @@ public class AddressServiceImpl implements AddressService {
                                            HttpStatus.FORBIDDEN);
         }
 
-        try {
-            List<Address> existingAddresses = user.getAddresses();
-            for (Address existing : existingAddresses) {
-                if (existing
-                        .getId()
-                        .equals(address.getId())) {
-                    existing.setIsDefault(true);
-                } else if (Boolean.TRUE.equals(existing.getIsDefault())) {
-                    existing.setIsDefault(false);
-                }
+        List<Address> existingAddresses = user.getAddresses();
+        for (Address existing : existingAddresses) {
+            if (existing
+                    .getId()
+                    .equals(address.getId())) {
+                existing.setIsDefault(true);
+            } else if (Boolean.TRUE.equals(existing.getIsDefault())) {
+                existing.setIsDefault(false);
             }
-
-            userRepo.save(user);
-
-            List<AddressResponseDto> addressResponseDtos = existingAddresses
-                    .stream()
-                    .map(addressMapper::mapAddressToAddressResponseDto)
-                    .toList();
-
-            return CommonResponseDto
-                    .<List<AddressResponseDto>>builder()
-                    .success(true)
-                    .data(addressResponseDtos)
-                    .message("Default address set successfully")
-                    .build();
-        } catch (DataAccessException e) {
-            throw new ApplicationException("500", "Failed to set default address",
-                                           HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        
+        List<AddressResponseDto> addressResponseDtos = existingAddresses
+                .stream()
+                .map(addressMapper::mapAddressToAddressResponseDto)
+                .toList();
+
+        return CommonResponseDto
+                .<List<AddressResponseDto>>builder()
+                .success(true)
+                .data(addressResponseDtos)
+                .message("Default address set successfully")
+                .build();
     }
 }
