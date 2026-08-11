@@ -2,6 +2,7 @@ package com.example.pricetag.features.address.controller;
 
 import com.example.pricetag.dto.CommonResponseDto;
 import com.example.pricetag.features.address.dto.request.AddressRequestDto;
+import com.example.pricetag.features.address.dto.request.DeleteAddressesIdsRequestDto;
 import com.example.pricetag.features.address.dto.response.AddressResponseDto;
 import com.example.pricetag.features.address.service.AddressService;
 import jakarta.validation.Valid;
@@ -52,6 +53,14 @@ public class AddressController {
             @PathVariable
             Long id) {
         return ResponseEntity.ok(addressService.deleteAddress(id));
+    }
+
+    @DeleteMapping("/delete_addresses")
+    public ResponseEntity<CommonResponseDto<List<AddressResponseDto>>> deleteAddresses(
+            @Valid
+            @RequestBody
+            DeleteAddressesIdsRequestDto deleteAddressesIdsRequestDto) {
+        return ResponseEntity.ok(addressService.deleteAddresses(deleteAddressesIdsRequestDto));
     }
 
     @PatchMapping("/{id}/default")

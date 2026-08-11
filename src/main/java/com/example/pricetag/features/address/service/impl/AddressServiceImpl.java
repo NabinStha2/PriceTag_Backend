@@ -3,6 +3,7 @@ package com.example.pricetag.features.address.service.impl;
 import com.example.pricetag.dto.CommonResponseDto;
 import com.example.pricetag.exceptions.ApplicationException;
 import com.example.pricetag.features.address.dto.request.AddressRequestDto;
+import com.example.pricetag.features.address.dto.request.DeleteAddressesIdsRequestDto;
 import com.example.pricetag.features.address.dto.response.AddressResponseDto;
 import com.example.pricetag.features.address.entity.Address;
 import com.example.pricetag.features.address.mapper.AddressMapper;
@@ -15,8 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -195,6 +196,69 @@ public class AddressServiceImpl implements AddressService {
                 .success(true)
                 .data(addressResponseDtos)
                 .message("Address deleted successfully")
+                .build();
+    }
+
+    @Override
+    public CommonResponseDto<List<AddressResponseDto>> deleteAddresses(
+            DeleteAddressesIdsRequestDto deleteAddressesIdsRequestDto) {
+        User authenticatedUser = authService.getUser();
+        User user = userRepo
+                .findByIdForUpdate(authenticatedUser.getId())
+                .orElseThrow(() -> new ApplicationException("404", "User not found",
+                                                            HttpStatus.NOT_FOUND));
+
+        if (deleteAddressesIdsRequestDto == null ||
+            deleteAddressesIdsRequestDto.getIds() == null ||
+            deleteAddressesIdsRequestDto.getIds().length == 0) {
+            throw new ApplicationException("400", "At least one address id is required",
+                                           HttpStatus.BAD_REQUEST);
+        }
+
+        Long[] ids = deleteAddressesIdsRequestDto.getIds();
+        if (Arrays
+                .stream(ids)
+                .anyMatch(id -> id == null)) {
+            throw new ApplicationException("400", "Address ids must not contain null values",
+                                           HttpStatus.BAD_REQUEST);
+        }
+
+        Set<Long> requestedIds = new HashSet<>(Arrays.asList(ids));
+        List<Address> existingAddresses = user.getAddresses();
+        Set<Long> ownedAddressIds = existingAddresses
+                .stream()
+                .map(Address::getId)
+                .collect(Collectors.toSet());
+
+        if (!ownedAddressIds.containsAll(requestedIds)) {
+            throw new ApplicationException("404", "One or more addresses not found",
+                                           HttpStatus.NOT_FOUND);
+        }
+
+        boolean defaultAddressDeleted = existingAddresses
+                .stream()
+                .anyMatch(address -> requestedIds.contains(address.getId()) &&
+                                     Boolean.TRUE.equals(address.getIsDefault()));
+
+        existingAddresses.removeIf(address -> requestedIds.contains(address.getId()));
+
+        if (defaultAddressDeleted && !existingAddresses.isEmpty()) {
+            existingAddresses.forEach(address -> address.setIsDefault(false));
+            existingAddresses
+                    .getFirst()
+                    .setIsDefault(true);
+        }
+
+        List<AddressResponseDto> addressResponseDtos = existingAddresses
+                .stream()
+                .map(addressMapper::mapAddressToAddressResponseDto)
+                .toList();
+
+        return CommonResponseDto
+                .<List<AddressResponseDto>>builder()
+                .success(true)
+                .data(addressResponseDtos)
+                .message("Addresses deleted successfully")
                 .build();
     }
 
