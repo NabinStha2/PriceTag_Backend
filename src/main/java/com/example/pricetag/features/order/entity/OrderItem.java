@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderItem extends BaseEntity {
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id",
             nullable = false)
     private Order order;
@@ -30,18 +30,37 @@ public class OrderItem extends BaseEntity {
             nullable = false)
     private Variants variants;
 
-    @Column(name = "quantity")
+    @Column(name = "color_name")
+    private String colorName;
+
+    @Column(name = "size_name")
+    private String sizeName;
+
+    @Column(name = "quantity",
+            nullable = false)
     private Integer quantity;
 
-    @Column(name = "unit_price")
+    @Column(name = "unit_price",
+            nullable = false,
+            precision = 10,
+            scale = 2)
     private BigDecimal unitPrice;
 
-    @Column(name = "total_price")
+    @Column(name = "total_price",
+            nullable = false,
+            precision = 10,
+            scale = 2)
     private BigDecimal totalPrice;
 
-    @Column(name = "sku")
+    @Column(name = "sku",
+            nullable = false,
+            length = 100)
     private String sku;
 
-    @Column(name = "product_name")
+    @Column(name = "product_name",
+            nullable = false)
     private String productName;
+
+    @Column(name = "image_url")
+    private String imageUrl;
 }

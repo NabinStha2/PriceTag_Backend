@@ -5,6 +5,7 @@ import com.example.pricetag.enums.OrderStatus;
 import com.example.pricetag.features.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ import java.util.List;
                 name = "uk_order_order_number")})
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Order extends BaseEntity {
@@ -35,7 +36,8 @@ public class Order extends BaseEntity {
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @Column(name = "order_number",
-            nullable = false)
+            nullable = false,
+            length = 50)
     private String orderNumber;
 
     @Column(name = "order_status",
@@ -45,17 +47,41 @@ public class Order extends BaseEntity {
     @Builder.Default
     private OrderStatus status = OrderStatus.PENDING_PAYMENT;
 
-    @Column(name = "total_amt")
-    private BigDecimal totalAmt;
+    @Column(name = "total_amt",
+            precision = 10,
+            scale = 2)
+    @Builder.Default
+    private BigDecimal totalAmt = BigDecimal.ZERO;
 
-    @Column(name = "shipping_amt")
-    private BigDecimal shippingAmt;
+    @Column(name = "shipping_amt",
+            precision = 10,
+            scale = 2)
+    @Builder.Default
+    private BigDecimal shippingAmt = BigDecimal.ZERO;
 
-    @Column(name = "tax_amt")
-    private BigDecimal taxAmt;
+    @Column(name = "tax_amt",
+            precision = 10,
+            scale = 2)
+    @Builder.Default
+    private BigDecimal taxAmt = BigDecimal.ZERO;
 
-    @Column(name = "discount_amt")
-    private BigDecimal discountAmt;
+    @Column(name = "discount_amt",
+            precision = 10,
+            scale = 2)
+    @Builder.Default
+    private BigDecimal discountAmt = BigDecimal.ZERO;
+
+    @Column(name = "subtotal_amt",
+            precision = 10,
+            scale = 2)
+    @Builder.Default
+    private BigDecimal subtotalAmt = BigDecimal.ZERO;
+
+    @Column(name = "currency",
+            nullable = false,
+            length = 3)
+    @Builder.Default
+    private String currency = "AUD";
 
     @Embedded
     private ShippingAddressSnapshot shippingAddressSnapshot;
