@@ -4,6 +4,7 @@ import com.example.pricetag.dto.CommonResponseDto;
 import com.example.pricetag.features.order.dto.requestDto.CreateOrderRequestDto;
 import com.example.pricetag.features.order.dto.responseDto.CreateOrderResponseDto;
 import com.example.pricetag.features.order.service.OrderService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,7 @@ public class OrderController {
 
     @PostMapping("")
     public ResponseEntity<CommonResponseDto<CreateOrderResponseDto>> createOrder(
+            @Valid
             @RequestBody
             CreateOrderRequestDto createOrderRequestDto) {
         return ResponseEntity

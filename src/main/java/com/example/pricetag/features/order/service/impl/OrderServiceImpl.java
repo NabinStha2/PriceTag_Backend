@@ -1,20 +1,291 @@
 package com.example.pricetag.features.order.service.impl;
 
 import com.example.pricetag.dto.CommonResponseDto;
+import com.example.pricetag.enums.CartStatus;
+import com.example.pricetag.enums.OrderStatus;
+import com.example.pricetag.exceptions.ApplicationException;
+import com.example.pricetag.features.Variant.entity.Variants;
+import com.example.pricetag.features.Variant.repository.VariantRepo;
+import com.example.pricetag.features.address.entity.Address;
+import com.example.pricetag.features.address.repository.AddressRepo;
+import com.example.pricetag.features.auth.service.AuthService;
+import com.example.pricetag.features.cart.entity.Cart;
+import com.example.pricetag.features.cart.repository.CartRepo;
 import com.example.pricetag.features.order.dto.requestDto.CreateOrderRequestDto;
 import com.example.pricetag.features.order.dto.responseDto.CreateOrderResponseDto;
+import com.example.pricetag.features.order.entity.Order;
+import com.example.pricetag.features.order.entity.OrderItem;
+import com.example.pricetag.features.order.entity.ShippingAddressSnapshot;
+import com.example.pricetag.features.order.mapper.OrderMapper;
+import com.example.pricetag.features.order.repository.OrderRepo;
 import com.example.pricetag.features.order.service.OrderService;
+import com.example.pricetag.features.user.entity.User;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class OrderServiceImpl implements OrderService {
 
+    private final AuthService authService;
+    private final CartRepo cartRepo;
+    private final AddressRepo addressRepo;
+    private final VariantRepo variantRepo;
+    private final OrderRepo orderRepo;
+    private final OrderMapper orderMapper;
+
+    public OrderServiceImpl(AuthService authService, CartRepo cartRepo, AddressRepo addressRepo,
+                            VariantRepo variantRepo, OrderRepo orderRepo, OrderMapper orderMapper) {
+        this.authService = authService;
+        this.cartRepo = cartRepo;
+        this.addressRepo = addressRepo;
+        this.variantRepo = variantRepo;
+        this.orderRepo = orderRepo;
+        this.orderMapper = orderMapper;
+    }
+
     @Override
     public CommonResponseDto<CreateOrderResponseDto> createOrder(
             CreateOrderRequestDto createOrderRequestDto) {
-        
-        return null;
+        User user = authService.getUser();
+
+         /*
+           * Lock the cart so another checkout request cannot
+           process it
+           * concurrently.
+           */
+        Cart cart = cartRepo
+                .findByUserIdForCheckout(user.getId())
+                .orElseThrow(() -> new ApplicationException("404", "Cart not found for user",
+                                                            HttpStatus.NOT_FOUND));
+        validateCart(cart);
+
+        /*
+           * Querying using both addressId and userId verifies
+           ownership.
+           */
+        Address address = addressRepo
+                .findByIdAndUserId(createOrderRequestDto.getAddressId(), user.getId())
+                .orElseThrow(
+                        () -> new ApplicationException("404", "Shipping Address not found for user",
+                                                       HttpStatus.NOT_FOUND));
+
+          /*
+           * Sort IDs so concurrent checkouts acquire variant
+           locks in
+           * a consistent order. This reduces deadlock risk.
+           */
+        List<Long> variantIds = cart
+                .getCartItems()
+                .stream()
+                .map(item -> item
+                        .getVariant()
+                        .getId())
+                .distinct()
+                .sorted()
+                .toList();
+
+        List<Variants> lockedVariants = variantRepo.findAllByIdForUpdate(variantIds);
+        if (lockedVariants.size() != variantIds.size()) {
+            throw new ApplicationException("409", "One or more cart products no longer exist",
+                                           HttpStatus.CONFLICT);
+        }
+        Map<Long, Variants> variantsById = lockedVariants
+                .stream()
+                .collect(Collectors.toMap(Variants::getId, v -> v));
+
+        ShippingAddressSnapshot shippingAddressSnapshot = createShippingAddressSnapshot(address,
+                                                                                        createOrderRequestDto);
+
+        Order order = Order
+                .builder()
+                .user(user)
+                .shippingAddressSnapshot(shippingAddressSnapshot)
+                .orderNumber(generateOrderNumber())
+                .status(OrderStatus.PENDING_PAYMENT)
+                .build();
+
+        final BigDecimal[] subtotal = {BigDecimal.ZERO};
+        cart
+
+                .getCartItems()
+                .forEach(cartItem -> {
+                    Long variantId = cartItem
+                            .getVariant()
+                            .getId();
+                    Variants variant = variantsById.get(variantId);
+                    validateVariantAndStock(variant, cartItem.getQuantity());
+
+                     /*
+               * Recalculate price using the current database
+               price.
+               * Never trust a total sent by the frontend.
+               */
+                    BigDecimal unitPrice = resolveUnitPrice(variant);
+                    BigDecimal totalPrice = unitPrice.multiply(
+                            BigDecimal.valueOf(cartItem.getQuantity()));
+
+                    OrderItem orderItem = OrderItem
+                            .builder()
+                            .variants(variant)
+                            .colorName(variant
+                                               .getColor()
+                                               .getName())
+                            .sizeName(variant
+                                              .getSize()
+                                              .getName())
+                            .quantity(cartItem.getQuantity())
+                            .unitPrice(unitPrice)
+                            .totalPrice(totalPrice)
+                            .sku(variant.getSku())
+                            .productName(variant
+                                                 .getProduct()
+                                                 .getName())
+                            .imageUrl(variant
+                                              .getProduct()
+                                              .getPrimaryImageUrl())
+                            .build();
+
+                    /*
+               * This helper establishes both sides of the
+               relationship.
+               */
+                    order.addOrderItem(orderItem);
+                    subtotal[0] = subtotal[0].add(totalPrice);
+
+                    /*
+               * Reserve stock while payment is pending.
+               * Payment failure or order expiry must add it back
+               later.
+               */
+                    variant.setStockQuantity(variant.getStockQuantity() - cartItem.getQuantity());
+                });
+
+        order.setShippingAmt(subtotal[0].compareTo(BigDecimal.valueOf(100)) >= 0 ? BigDecimal.ZERO :
+                             BigDecimal.valueOf(10));
+        order.setTaxAmt(subtotal[0].multiply(BigDecimal.valueOf(0.1))); // 10% tax
+        order.setDiscountAmt(BigDecimal.ZERO); // No discount logic implemented yet
+        order.setSubtotalAmt(subtotal[0]);
+        order.setTotalAmt(subtotal[0]
+                                  .subtract(order.getDiscountAmt())
+                                  .add(order.getShippingAmt())
+                                  .add(order.getTaxAmt()));
+
+         /*
+           * Stop the customer modifying the cart while payment is
+           pending.
+           */
+        cart.setStatus(CartStatus.CHECKOUT);
+
+ /*
+           * OrderItem entities are saved automatically because
+           Order has
+           * cascade = CascadeType.ALL.
+           */
+        Order savedOrder = orderRepo.save(order);
+
+        return CommonResponseDto
+                .<CreateOrderResponseDto>builder()
+                .success(true)
+                .status(HttpStatus.CREATED.value())
+                .message("Order created. Payment is required.")
+                .data(orderMapper.mapOrderToCreateOrderResponseDto(savedOrder))
+                .build();
+    }
+
+    private void validateCart(Cart cart) {
+        if (cart.getStatus() == CartStatus.CHECKOUT) {
+            throw new ApplicationException("409", "Cart is locked while checkout is in progress",
+                                           HttpStatus.CONFLICT);
+        }
+        if (cart.getCartItems() == null || cart
+                .getCartItems()
+                .isEmpty()) {
+            throw new ApplicationException("400", "Cart is empty", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void validateVariantAndStock(Variants variant, Integer requestedQuantity) {
+        if (variant == null || !Boolean.TRUE.equals(variant.getIsActive()) ||
+            Boolean.TRUE.equals(variant.getIsDeleted())) {
+            throw new ApplicationException("404", "Product variant not found or inactive",
+                                           HttpStatus.NOT_FOUND);
+        }
+
+        if (!Boolean.TRUE.equals(variant
+                                         .getProduct()
+                                         .getIsActive()) || Boolean.TRUE.equals(variant
+                                                                                        .getProduct()
+                                                                                        .getIsDeleted())) {
+            throw new ApplicationException("409", "A cart product is no longer available",
+                                           HttpStatus.CONFLICT);
+        }
+
+        if (requestedQuantity == null || requestedQuantity <= 0) {
+            throw new ApplicationException("400", "Invalid quantity", HttpStatus.BAD_REQUEST);
+        }
+
+        if (requestedQuantity > variant.getStockQuantity()) {
+            throw new ApplicationException("409", "Insufficient stock. Only " +
+                                                  variant.getStockQuantity() +
+                                                  " left in stock for SKU: " + variant.getSku(),
+                                           HttpStatus.CONFLICT);
+        }
+
+    }
+
+
+    private BigDecimal resolveUnitPrice(Variants variant) {
+        BigDecimal unitPrice = variant.getDiscountedPrice() != null ? variant.getDiscountedPrice() :
+                               variant.getActualPrice();
+
+        if (unitPrice == null || unitPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ApplicationException("409", "Invalid price for SKU " + variant.getSku(),
+                                           HttpStatus.CONFLICT);
+        }
+
+        return unitPrice;
+    }
+
+
+    private ShippingAddressSnapshot createShippingAddressSnapshot(Address address,
+                                                                  CreateOrderRequestDto createOrderRequestDto) {
+        return ShippingAddressSnapshot
+                .builder()
+                .sourceAddressId(address.getId())
+                .recipientName(createOrderRequestDto.getRecipientName())
+                .phone(createOrderRequestDto.getPhoneNumber())
+                .unitNumber(address.getUnitNumber())
+                .streetNumber(address.getStreetNumber())
+                .street(address.getStreet())
+                .city(address.getCity())
+                .state(address.getState())
+                .postalCode(address.getPostalCode())
+                .country(address.getCountry())
+                .build();
+    }
+
+    private String generateOrderNumber() {
+        String date = LocalDate
+                .now()
+                .format(DateTimeFormatter.BASIC_ISO_DATE);
+
+        String randomPart = UUID
+                .randomUUID()
+                .toString()
+                .replace("-", "")
+                .substring(0, 10)
+                .toUpperCase();
+
+        return "PT-" + date + "-" + randomPart;
     }
 }

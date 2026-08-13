@@ -73,6 +73,7 @@ public class User {
             fetch = FetchType.LAZY)
     @OrderBy("createdAt ASC, id ASC")
     @Builder.Default
+    @JsonIgnore
     private List<Address> addresses = new ArrayList<>();
 
     @OneToMany(mappedBy = "user",

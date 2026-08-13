@@ -87,7 +87,10 @@ public class Order extends BaseEntity {
     private ShippingAddressSnapshot shippingAddressSnapshot;
 
     public void addOrderItem(OrderItem orderItem) {
+        // Order knows about OrderItem
         orderItems.add(orderItem);
+
+        // OrderItem knows about Order
         orderItem.setOrder(this);
     }
 
