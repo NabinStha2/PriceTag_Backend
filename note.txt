@@ -1,2 +1,0 @@
-@ModelAttribute which binds form fields by field name.
-@DynamicUpdate = Only sends changed columns in the SQL — unchanged fields never touched
