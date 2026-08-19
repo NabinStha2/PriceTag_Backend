@@ -1,6 +1,8 @@
 package com.example.pricetag.features.order.service.impl;
 
 import com.example.pricetag.dto.CommonResponseDto;
+import com.example.pricetag.dto.PaginatedResponseDto;
+import com.example.pricetag.dto.PaginationRequestDto;
 import com.example.pricetag.enums.CartStatus;
 import com.example.pricetag.enums.OrderStatus;
 import com.example.pricetag.exceptions.ApplicationException;
@@ -13,6 +15,7 @@ import com.example.pricetag.features.cart.entity.Cart;
 import com.example.pricetag.features.cart.repository.CartRepo;
 import com.example.pricetag.features.order.dto.requestDto.CreateOrderRequestDto;
 import com.example.pricetag.features.order.dto.responseDto.CreateOrderResponseDto;
+import com.example.pricetag.features.order.dto.responseDto.OrderSummaryResponseDto;
 import com.example.pricetag.features.order.entity.Order;
 import com.example.pricetag.features.order.entity.OrderItem;
 import com.example.pricetag.features.order.entity.ShippingAddressSnapshot;
@@ -20,6 +23,10 @@ import com.example.pricetag.features.order.mapper.OrderMapper;
 import com.example.pricetag.features.order.repository.OrderRepo;
 import com.example.pricetag.features.order.service.OrderService;
 import com.example.pricetag.features.user.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -199,6 +206,48 @@ public class OrderServiceImpl implements OrderService {
                 .status(HttpStatus.CREATED.value())
                 .message("Order created. Payment is required.")
                 .data(orderMapper.mapOrderToCreateOrderResponseDto(savedOrder))
+                .build();
+    }
+
+    @Override
+    public CommonResponseDto<List<OrderSummaryResponseDto>> getAllOrdersByUser(
+            PaginationRequestDto paginationRequestDto) {
+        User user = authService.getUser();
+
+        int requestedPage = paginationRequestDto != null ? paginationRequestDto.getPage() : 1;
+        int requestedLimit = paginationRequestDto != null ? paginationRequestDto.getLimit() : 10;
+        String sortBy = paginationRequestDto != null && paginationRequestDto.getSortBy() != null ?
+                        paginationRequestDto.getSortBy() : "createdAt";
+        String sortDir = paginationRequestDto != null && paginationRequestDto.getOrder() != null ?
+                         paginationRequestDto.getOrder() : Sort.Direction.DESC.name();
+
+
+        /*
+         * API pages start at 1, but Spring Data pages start at 0.
+         */
+        int page = Math.max(requestedPage, 1) - 1;
+        /*
+         * Prevent a request such as limit=100000 from loading too
+         * many orders into memory.
+         */
+        int limit = Math.clamp(requestedLimit, 1, 100);
+        Sort.Direction dir =
+                sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.Direction.ASC :
+                Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(page, limit, Sort.by(dir, sortBy));
+        Page<Order> orderPage = orderRepo.findAllByUserId(user.getId(), pageable);
+
+        List<OrderSummaryResponseDto> orderSummaries = orderMapper.mapOrderListToOrderSummaryResponseDtoList(
+                orderPage.getContent());
+
+        return CommonResponseDto
+                .<List<OrderSummaryResponseDto>>builder()
+                .success(true)
+                .status(HttpStatus.OK.value())
+                .message("Orders retrieved successfully")
+                .data(orderSummaries)
+                .pagination(PaginatedResponseDto.from(orderPage))
                 .build();
     }
 
