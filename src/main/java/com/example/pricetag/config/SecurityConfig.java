@@ -82,7 +82,8 @@ public class SecurityConfig {
             "/api/v1/subcategory/*",
             "/api/v1/product/*",
             "/api/v1/variant/",
-            "/api/v1/variant/*"
+            "/api/v1/variant/*",
+            "/api/v1/orders/*"
     };
 
     // Turns AppUserRole.ROLE_ADMIN into "ADMIN", because Spring's hasRole()

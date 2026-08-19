@@ -4,6 +4,7 @@ import com.example.pricetag.dto.CommonResponseDto;
 import com.example.pricetag.dto.PaginationRequestDto;
 import com.example.pricetag.features.order.dto.requestDto.CreateOrderRequestDto;
 import com.example.pricetag.features.order.dto.responseDto.CreateOrderResponseDto;
+import com.example.pricetag.features.order.dto.responseDto.OrderDetailsResponseDto;
 import com.example.pricetag.features.order.dto.responseDto.OrderSummaryResponseDto;
 import com.example.pricetag.features.order.service.OrderService;
 import jakarta.validation.Valid;
@@ -58,5 +59,14 @@ public class OrderController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(orderService.getAllOrdersByUser(paginationRequestDto));
+    }
+
+    @GetMapping("/{orderNumber}")
+    public ResponseEntity<CommonResponseDto<OrderDetailsResponseDto>> getSingleOrder(
+            @PathVariable
+            String orderNumber) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(orderService.getSingleOrderDetailsByUser(orderNumber));
     }
 }

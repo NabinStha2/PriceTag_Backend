@@ -15,6 +15,7 @@ import com.example.pricetag.features.cart.entity.Cart;
 import com.example.pricetag.features.cart.repository.CartRepo;
 import com.example.pricetag.features.order.dto.requestDto.CreateOrderRequestDto;
 import com.example.pricetag.features.order.dto.responseDto.CreateOrderResponseDto;
+import com.example.pricetag.features.order.dto.responseDto.OrderDetailsResponseDto;
 import com.example.pricetag.features.order.dto.responseDto.OrderSummaryResponseDto;
 import com.example.pricetag.features.order.entity.Order;
 import com.example.pricetag.features.order.entity.OrderItem;
@@ -210,6 +211,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CommonResponseDto<List<OrderSummaryResponseDto>> getAllOrdersByUser(
             PaginationRequestDto paginationRequestDto) {
         User user = authService.getUser();
@@ -238,7 +240,7 @@ public class OrderServiceImpl implements OrderService {
         Pageable pageable = PageRequest.of(page, limit, Sort.by(dir, sortBy));
         Page<Order> orderPage = orderRepo.findAllByUserId(user.getId(), pageable);
 
-        List<OrderSummaryResponseDto> orderSummaries = orderMapper.mapOrderListToOrderSummaryResponseDtoList(
+        List<OrderSummaryResponseDto> orderSummaryResponseDtosList = orderMapper.mapOrderListToOrderSummaryResponseDtoList(
                 orderPage.getContent());
 
         return CommonResponseDto
@@ -246,11 +248,38 @@ public class OrderServiceImpl implements OrderService {
                 .success(true)
                 .status(HttpStatus.OK.value())
                 .message("Orders retrieved successfully")
-                .data(orderSummaries)
+                .data(orderSummaryResponseDtosList)
                 .pagination(PaginatedResponseDto.from(orderPage))
                 .build();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public CommonResponseDto<OrderDetailsResponseDto> getSingleOrderDetailsByUser(
+            String orderNumber) {
+        if (orderNumber == null || orderNumber.isBlank()) {
+            throw new ApplicationException("400", "Order number is required",
+                                           HttpStatus.BAD_REQUEST);
+        }
+
+        User user = authService.getUser();
+
+        Order order = orderRepo
+                .findByOrderNumberAndUserId(orderNumber, user.getId())
+                .orElseThrow(() -> new ApplicationException("404", "Order not found for user",
+                                                            HttpStatus.NOT_FOUND));
+
+        return CommonResponseDto
+                .<OrderDetailsResponseDto>builder()
+                .success(true)
+                .status(HttpStatus.OK.value())
+                .message("Order retrieved successfully")
+                .data(orderMapper.mapOrderToOrderDetailsResponseDto(order))
+                .build();
+    }
+
+
+    // Helper methods ---------------------------------------------------------------------
     private void validateCart(Cart cart) {
         if (cart.getStatus() == CartStatus.CHECKOUT) {
             throw new ApplicationException("409", "Cart is locked while checkout is in progress",
