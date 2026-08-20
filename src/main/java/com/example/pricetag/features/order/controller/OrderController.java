@@ -2,6 +2,7 @@ package com.example.pricetag.features.order.controller;
 
 import com.example.pricetag.dto.CommonResponseDto;
 import com.example.pricetag.dto.PaginationRequestDto;
+import com.example.pricetag.features.order.dto.requestDto.CancelOrderRequestDto;
 import com.example.pricetag.features.order.dto.requestDto.CreateOrderRequestDto;
 import com.example.pricetag.features.order.dto.responseDto.CreateOrderResponseDto;
 import com.example.pricetag.features.order.dto.responseDto.OrderDetailsResponseDto;
@@ -36,7 +37,7 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<CommonResponseDto<List<OrderSummaryResponseDto>>> getAllOrdersByUser(
-            @RequestParam(defaultValue = "0",
+            @RequestParam(defaultValue = "1",
                     required = false)
             int page,
             @RequestParam(defaultValue = "10",
@@ -68,5 +69,16 @@ public class OrderController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(orderService.getSingleOrderDetailsByUser(orderNumber));
+    }
+
+    @PostMapping("/{orderNumber}/cancel")
+    public ResponseEntity<CommonResponseDto<OrderDetailsResponseDto>> cancelOrder(
+            @PathVariable
+            String orderNumber,
+            @RequestBody
+            CancelOrderRequestDto cancelOrderRequestDto) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(orderService.cancelOrder(orderNumber, cancelOrderRequestDto));
     }
 }

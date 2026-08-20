@@ -30,6 +30,8 @@ public interface OrderMapper {
             source = "id")
     @Mapping(target = "variantId",
             source = "variants.id")
+    @Mapping(target = "totalAmount",
+            source = "totalPrice")
     OrderItemResponseDto mapOrderItemToOrderItemResponseDto(OrderItem orderItem);
 
     ShippingAddressResponseDto mapShippingAddressSnapshotToShippingAddressResponseDto(

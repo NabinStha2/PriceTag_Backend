@@ -13,12 +13,14 @@ import com.example.pricetag.features.address.repository.AddressRepo;
 import com.example.pricetag.features.auth.service.AuthService;
 import com.example.pricetag.features.cart.entity.Cart;
 import com.example.pricetag.features.cart.repository.CartRepo;
+import com.example.pricetag.features.order.dto.requestDto.CancelOrderRequestDto;
 import com.example.pricetag.features.order.dto.requestDto.CreateOrderRequestDto;
 import com.example.pricetag.features.order.dto.responseDto.CreateOrderResponseDto;
 import com.example.pricetag.features.order.dto.responseDto.OrderDetailsResponseDto;
 import com.example.pricetag.features.order.dto.responseDto.OrderSummaryResponseDto;
 import com.example.pricetag.features.order.entity.Order;
 import com.example.pricetag.features.order.entity.OrderItem;
+import com.example.pricetag.features.order.entity.OrderStatusHistory;
 import com.example.pricetag.features.order.entity.ShippingAddressSnapshot;
 import com.example.pricetag.features.order.mapper.OrderMapper;
 import com.example.pricetag.features.order.repository.OrderRepo;
@@ -34,9 +36,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -44,6 +48,9 @@ import java.util.stream.Collectors;
 @Transactional
 public class OrderServiceImpl implements OrderService {
 
+    private static final Set<String> ALLOWED_ORDER_SORT_FIELDS = Set.of("createdAt", "orderNumber",
+                                                                        "status", "paymentStatus",
+                                                                        "totalAmt");
     private final AuthService authService;
     private final CartRepo cartRepo;
     private final AddressRepo addressRepo;
@@ -145,12 +152,12 @@ public class OrderServiceImpl implements OrderService {
                     OrderItem orderItem = OrderItem
                             .builder()
                             .variants(variant)
-                            .colorName(variant
-                                               .getColor()
-                                               .getName())
-                            .sizeName(variant
-                                              .getSize()
-                                              .getName())
+                            .colorName(variant.getColor() == null ? null : variant
+                                                                           .getColor()
+                                                                           .getName())
+                            .sizeName(variant.getSize() == null ? null : variant
+                                                                         .getSize()
+                                                                         .getName())
                             .quantity(cartItem.getQuantity())
                             .unitPrice(unitPrice)
                             .totalPrice(totalPrice)
@@ -187,6 +194,9 @@ public class OrderServiceImpl implements OrderService {
                                   .subtract(order.getDiscountAmt())
                                   .add(order.getShippingAmt())
                                   .add(order.getTaxAmt()));
+        order.setExpiresAt(LocalDateTime
+                                   .now()
+                                   .plusMinutes(15)); // Order expires in 15 minutes
 
          /*
            * Stop the customer modifying the cart while payment is
@@ -214,12 +224,14 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public CommonResponseDto<List<OrderSummaryResponseDto>> getAllOrdersByUser(
             PaginationRequestDto paginationRequestDto) {
+
         User user = authService.getUser();
 
         int requestedPage = paginationRequestDto != null ? paginationRequestDto.getPage() : 1;
         int requestedLimit = paginationRequestDto != null ? paginationRequestDto.getLimit() : 10;
         String sortBy = paginationRequestDto != null && paginationRequestDto.getSortBy() != null ?
-                        paginationRequestDto.getSortBy() : "createdAt";
+                        ALLOWED_ORDER_SORT_FIELDS.contains(paginationRequestDto.getSortBy()) ?
+                        paginationRequestDto.getSortBy() : "createdAt" : "createdAt";
         String sortDir = paginationRequestDto != null && paginationRequestDto.getOrder() != null ?
                          paginationRequestDto.getOrder() : Sort.Direction.DESC.name();
 
@@ -274,6 +286,53 @@ public class OrderServiceImpl implements OrderService {
                 .success(true)
                 .status(HttpStatus.OK.value())
                 .message("Order retrieved successfully")
+                .data(orderMapper.mapOrderToOrderDetailsResponseDto(order))
+                .build();
+    }
+
+    @Override
+    public CommonResponseDto<OrderDetailsResponseDto> cancelOrder(String orderNumber,
+                                                                  CancelOrderRequestDto cancelOrderRequestDto) {
+        User user = authService.getUser();
+
+        Order order = orderRepo
+                .findByOrderNumberAndUserIdForUpdate(orderNumber, user.getId())
+                .orElseThrow(() -> new ApplicationException("404", "Order not found for user",
+                                                            HttpStatus.NOT_FOUND));
+
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new ApplicationException("409", "Only pending-payment orders can be cancelled",
+                                           HttpStatus.CONFLICT);
+        }
+
+        restoreOrderStock(order);
+
+        OrderStatus previousStatus = order.getStatus();
+
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setCancellationReason(cancelOrderRequestDto.getReason());
+
+        order.addStatusHistory(OrderStatusHistory
+                                       .builder()
+                                       .previousStatus(previousStatus)
+                                       .newStatus(OrderStatus.CANCELLED)
+                                       .note(cancelOrderRequestDto.getReason())
+                                       .actorUserId(user.getId())
+                                       .actorEmail(user.getEmail())
+                                       .build());
+
+        Cart cart = cartRepo
+                .findByUserIdForCheckout(user.getId())
+                .orElseThrow(() -> new ApplicationException("404", "Cart not found for user",
+                                                            HttpStatus.NOT_FOUND));
+
+        cart.setStatus(CartStatus.ACTIVE);
+
+        return CommonResponseDto
+                .<OrderDetailsResponseDto>builder()
+                .success(true)
+                .status(HttpStatus.OK.value())
+                .message("Order cancelled successfully")
                 .data(orderMapper.mapOrderToOrderDetailsResponseDto(order))
                 .build();
     }
@@ -366,4 +425,44 @@ public class OrderServiceImpl implements OrderService {
 
         return "PT-" + date + "-" + randomPart;
     }
+
+    private void restoreOrderStock(Order order) {
+        if (order.isStockRestored()) {
+            return;
+        }
+
+        List<Long> variantIds = order
+                .getOrderItems()
+                .stream()
+                .map(item -> item
+                        .getVariants()
+                        .getId())
+                .distinct()
+                .sorted()
+                .toList();
+
+        Map<Long, Variants> variantsById = variantRepo
+                .findAllByIdForUpdate(variantIds)
+                .stream()
+                .collect(Collectors.toMap(Variants::getId, variant -> variant));
+
+        order
+                .getOrderItems()
+                .forEach(orderItem -> {
+                    Variants variant = variantsById.get(orderItem
+                                                                .getVariants()
+                                                                .getId());
+                    if (variant == null) {
+                        throw new ApplicationException("409", "Unable to restore stock for SKU " +
+                                                              orderItem.getSku(),
+                                                       HttpStatus.CONFLICT);
+                    }
+
+                    variant.setStockQuantity(variant.getStockQuantity() + orderItem.getQuantity());
+                });
+
+        order.setStockRestored(true);
+    }
+
+    // ------------------------------------------------------------------------------------
 }

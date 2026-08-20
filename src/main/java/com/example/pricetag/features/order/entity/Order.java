@@ -14,29 +14,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(
-        name = "orders",
-        indexes = {
-                @Index(
-                        name = "idx_order_user_created",
-                        columnList = "user_id, created_at"
-                ),
-                @Index(
-                        name = "idx_order_status",
-                        columnList = "order_status"
-                ),
-                @Index(
-                        name = "idx_order_payment_status",
-                        columnList = "payment_status"
-                )
-        },
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_order_number",
-                        columnNames = "order_number"
-                )
-        }
-)
+@Table(name = "orders",
+        indexes = {@Index(name = "idx_order_user_created",
+                columnList = "user_id, created_at"), @Index(name = "idx_order_status",
+                columnList = "order_status"), @Index(name = "idx_order_payment_status",
+                columnList = "payment_status")},
+        uniqueConstraints = {@UniqueConstraint(name = "uk_order_number",
+                columnNames = "order_number")})
 @Getter
 @Setter
 @SuperBuilder
@@ -46,92 +30,75 @@ public class Order extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY,
             optional = false)
-    @JoinColumn(
-            name = "user_id",
-            nullable = false
-    )
+    @JoinColumn(name = "user_id",
+            nullable = false)
     private User user;
 
-    @Column(
-            name = "order_number",
+    @Column(name = "order_number",
             nullable = false,
-            length = 50
-    )
+            length = 50)
     private String orderNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "order_status",
+    @Column(name = "order_status",
             nullable = false,
-            length = 30
-    )
+            length = 30)
     @Builder.Default
     private OrderStatus status = OrderStatus.PENDING_PAYMENT;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "payment_status",
+    @Column(name = "payment_status",
             nullable = false,
-            length = 30
-    )
+            length = 30)
     @Builder.Default
     private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
 
 
     // =========================
     // MONEY
     // =========================
 
-    @Column(
-            name = "subtotal_amt",
+    @Column(name = "subtotal_amt",
             nullable = false,
             precision = 19,
-            scale = 2
-    )
+            scale = 2)
     @Builder.Default
     private BigDecimal subtotalAmt = BigDecimal.ZERO;
 
-    @Column(
-            name = "discount_amt",
+    @Column(name = "discount_amt",
             nullable = false,
             precision = 19,
-            scale = 2
-    )
+            scale = 2)
     @Builder.Default
     private BigDecimal discountAmt = BigDecimal.ZERO;
 
-    @Column(
-            name = "shipping_amt",
+    @Column(name = "shipping_amt",
             nullable = false,
             precision = 19,
-            scale = 2
-    )
+            scale = 2)
     @Builder.Default
     private BigDecimal shippingAmt = BigDecimal.ZERO;
 
-    @Column(
-            name = "tax_amt",
+    @Column(name = "tax_amt",
             nullable = false,
             precision = 19,
-            scale = 2
-    )
+            scale = 2)
     @Builder.Default
     private BigDecimal taxAmt = BigDecimal.ZERO;
 
-    @Column(
-            name = "total_amt",
+    @Column(name = "total_amt",
             nullable = false,
             precision = 19,
-            scale = 2
-    )
+            scale = 2)
     @Builder.Default
     private BigDecimal totalAmt = BigDecimal.ZERO;
 
-    @Column(
-            name = "currency",
+    @Column(name = "currency",
             nullable = false,
-            length = 3
-    )
+            length = 3)
     @Builder.Default
     private String currency = "AUD";
 
@@ -148,10 +115,8 @@ public class Order extends BaseEntity {
     // PAYMENT
     // =========================
 
-    @Column(
-            name = "payment_reference",
-            length = 200
-    )
+    @Column(name = "payment_reference",
+            length = 200)
     private String paymentReference;
 
     @Column(name = "paid_at")
@@ -162,10 +127,8 @@ public class Order extends BaseEntity {
     // SHIPPING
     // =========================
 
-    @Column(
-            name = "tracking_number",
-            length = 100
-    )
+    @Column(name = "tracking_number",
+            length = 100)
     private String trackingNumber;
 
 
@@ -173,10 +136,8 @@ public class Order extends BaseEntity {
     // CANCELLATION
     // =========================
 
-    @Column(
-            name = "cancellation_reason",
-            length = 500
-    )
+    @Column(name = "cancellation_reason",
+            length = 500)
     private String cancellationReason;
 
 
@@ -184,10 +145,8 @@ public class Order extends BaseEntity {
     // INVENTORY SAFETY
     // =========================
 
-    @Column(
-            name = "stock_restored",
-            nullable = false
-    )
+    @Column(name = "stock_restored",
+            nullable = false)
     @Builder.Default
     private boolean stockRestored = false;
 
@@ -204,20 +163,16 @@ public class Order extends BaseEntity {
     // RELATIONSHIPS
     // =========================
 
-    @OneToMany(
-            mappedBy = "order",
+    @OneToMany(mappedBy = "order",
             cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+            orphanRemoval = true)
     @OrderBy("id ASC")
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    @OneToMany(
-            mappedBy = "order",
+    @OneToMany(mappedBy = "order",
             cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+            orphanRemoval = true)
     @OrderBy("createdAt ASC")
     @Builder.Default
     private List<OrderStatusHistory> statusHistory = new ArrayList<>();
