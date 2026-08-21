@@ -75,6 +75,7 @@ public class OrderController {
     public ResponseEntity<CommonResponseDto<OrderDetailsResponseDto>> cancelOrder(
             @PathVariable
             String orderNumber,
+            @Valid
             @RequestBody
             CancelOrderRequestDto cancelOrderRequestDto) {
         return ResponseEntity
