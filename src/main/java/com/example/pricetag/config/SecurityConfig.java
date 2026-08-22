@@ -51,40 +51,14 @@ import java.util.List;
 public class SecurityConfig {
 
     // Anyone can call these without logging in.
-    private static final String[] PUBLIC_ENDPOINTS = {
-            "/api/v1/auth/login",
-            "/api/v1/auth/register",
-            "/api/v1/auth/verify-otp",
-            "/api/v1/auth/forgot-password",
-            "/api/v1/auth/verify-forgot-password-otp",
-            "/api/v1/auth/welcome",
-            "/",
-            "/actuator/health",
-            "/swagger-ui/**",
-            "/v3/api-docs/**"
-    };
+    private static final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/verify-otp", "/api/v1/auth/forgot-password", "/api/v1/auth/verify-forgot-password-otp", "/api/v1/auth/welcome", "/", "/actuator/health", "/swagger-ui/**", "/v3/api-docs/**", "/api/v1/payments/stripe/webhook"};
 
     // Only users with ROLE_ADMIN can call these.
-    private static final String[] ADMIN_ENDPOINTS = {
-            "/api/v1/category/add",
-            "/api/v1/subcategory/*/add",
-            "/api/v1/subcategory/edit",
-            "/api/v1/product/category/*/subcategory/*/add", // was "{categoryId}" - fixed, see note above
-            "/api/v1/image/upload",
-            "/api/v1/variant/edit/*",
-            "/api/v1/variant/product/*"
-    };
+    private static final String[] ADMIN_ENDPOINTS = {"/api/v1/category/add", "/api/v1/subcategory/*/add", "/api/v1/subcategory/edit", "/api/v1/product/category/*/subcategory/*/add", // was "{categoryId}" - fixed, see note above
+                                                     "/api/v1/image/upload", "/api/v1/variant/edit/*", "/api/v1/variant/product/*"};
 
     // Any logged-in user (USER or ADMIN) can call these.
-    private static final String[] USER_ENDPOINTS = {
-            "/user/**",
-            "/api/v1/category/*",
-            "/api/v1/subcategory/*",
-            "/api/v1/product/*",
-            "/api/v1/variant/",
-            "/api/v1/variant/*",
-            "/api/v1/orders/*"
-    };
+    private static final String[] USER_ENDPOINTS = {"/user/**", "/api/v1/category/*", "/api/v1/subcategory/*", "/api/v1/product/*", "/api/v1/variant/", "/api/v1/variant/*", "/api/v1/orders/*"};
 
     // Turns AppUserRole.ROLE_ADMIN into "ADMIN", because Spring's hasRole()
     // adds the "ROLE_" prefix back on automatically - passing "ROLE_ADMIN"
@@ -115,9 +89,8 @@ public class SecurityConfig {
                         .requestMatchers(ADMIN_ENDPOINTS)
                         .hasRole(extractRole(AppUserRole.ROLE_ADMIN))
                         .requestMatchers(USER_ENDPOINTS)
-                        .hasAnyRole(
-                                extractRole(AppUserRole.ROLE_USER),
-                                extractRole(AppUserRole.ROLE_ADMIN))
+                        .hasAnyRole(extractRole(AppUserRole.ROLE_USER),
+                                    extractRole(AppUserRole.ROLE_ADMIN))
                         // Anything not listed above still requires SOME logged-in
                         // user. This is your safety net - new endpoints are locked
                         // down by default until you explicitly open them up above.
@@ -154,8 +127,8 @@ public class SecurityConfig {
         // DaoAuthenticationProvider = "look the user up via UserDetailsService,
         // then compare the submitted password against the stored hash using
         // the given PasswordEncoder."
-        DaoAuthenticationProvider daoAuthenticationProvider =
-                new DaoAuthenticationProvider(userDetailsService);
+        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider(
+                userDetailsService);
         daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
         return daoAuthenticationProvider;
     }
@@ -166,11 +139,9 @@ public class SecurityConfig {
 
         // Only these origins may call the API from a browser.
         // Update this list as your frontend domains change.
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
-                "http://localhost:8080",
-                "https://yourdomain.com"
-                                                     ));
+        configuration.setAllowedOrigins(
+                Arrays.asList("http://localhost:3000", "http://localhost:8080",
+                              "https://yourdomain.com"));
 
         configuration.setAllowedMethods(
                 Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));

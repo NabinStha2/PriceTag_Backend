@@ -41,7 +41,7 @@ public class Payment extends BaseEntity {
     @Column(name = "payment_id",
             nullable = false,
             length = 200)
-    private String paymentId;
+    private String paymentId; // payment_intent_id
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status",

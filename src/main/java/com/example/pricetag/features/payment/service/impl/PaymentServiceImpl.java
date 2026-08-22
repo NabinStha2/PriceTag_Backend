@@ -140,7 +140,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .setCurrency(order
                                      .getCurrency()
                                      .toLowerCase(Locale.ROOT))
-                .setPaymentMethod("card")
+                .addPaymentMethodType(PaymentMethod.CARD
+                                              .name()
+                                              .toLowerCase(Locale.ROOT))
                 .setReceiptEmail(user.getEmail())
                 .setDescription("Payment for order: " + order.getOrderNumber())
                 .putMetadata("order_number", order.getOrderNumber())

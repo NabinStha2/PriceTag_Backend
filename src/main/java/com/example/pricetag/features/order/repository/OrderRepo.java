@@ -41,4 +41,11 @@ public interface OrderRepo extends JpaRepository<Order, Long> {
             @Param("userId")
             Long userId);
 
+//    @Lock(LockModeType.PESSIMISTIC_WRITE)
+//    @Query("select distinct o from Order o " + "left join fetch o.orderItems oi " +
+//           "left join fetch oi.variants oiv " + "where o.paymentReference = :paymentReference")
+//    Optional<Order> findByPaymentReferenceForUpdate(
+//            @Param("paymentReference")
+//            Long paymentReference);
+
 }
