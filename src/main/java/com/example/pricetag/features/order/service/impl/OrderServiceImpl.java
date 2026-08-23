@@ -20,10 +20,10 @@ import com.example.pricetag.features.order.dto.responseDto.OrderDetailsResponseD
 import com.example.pricetag.features.order.dto.responseDto.OrderSummaryResponseDto;
 import com.example.pricetag.features.order.entity.Order;
 import com.example.pricetag.features.order.entity.OrderItem;
-import com.example.pricetag.features.order.entity.OrderStatusHistory;
 import com.example.pricetag.features.order.entity.ShippingAddressSnapshot;
 import com.example.pricetag.features.order.mapper.OrderMapper;
 import com.example.pricetag.features.order.repository.OrderRepo;
+import com.example.pricetag.features.order.service.OrderLifecycleService;
 import com.example.pricetag.features.order.service.OrderService;
 import com.example.pricetag.features.user.entity.User;
 import org.springframework.data.domain.Page;
@@ -57,15 +57,18 @@ public class OrderServiceImpl implements OrderService {
     private final VariantRepo variantRepo;
     private final OrderRepo orderRepo;
     private final OrderMapper orderMapper;
+    private final OrderLifecycleService orderLifecycleService;
 
     public OrderServiceImpl(AuthService authService, CartRepo cartRepo, AddressRepo addressRepo,
-                            VariantRepo variantRepo, OrderRepo orderRepo, OrderMapper orderMapper) {
+                            VariantRepo variantRepo, OrderRepo orderRepo, OrderMapper orderMapper,
+                            OrderLifecycleService orderLifecycleService) {
         this.authService = authService;
         this.cartRepo = cartRepo;
         this.addressRepo = addressRepo;
         this.variantRepo = variantRepo;
         this.orderRepo = orderRepo;
         this.orderMapper = orderMapper;
+        this.orderLifecycleService = orderLifecycleService;
     }
 
     @Override
@@ -294,39 +297,8 @@ public class OrderServiceImpl implements OrderService {
     public CommonResponseDto<OrderDetailsResponseDto> cancelOrder(String orderNumber,
                                                                   CancelOrderRequestDto cancelOrderRequestDto) {
         User user = authService.getUser();
-
-        Order order = orderRepo
-                .findByOrderNumberAndUserIdForUpdate(orderNumber, user.getId())
-                .orElseThrow(() -> new ApplicationException("404", "Order not found for user",
-                                                            HttpStatus.NOT_FOUND));
-
-        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
-            throw new ApplicationException("409", "Only pending-payment orders can be cancelled",
-                                           HttpStatus.CONFLICT);
-        }
-
-        restoreOrderStock(order);
-
-        OrderStatus previousStatus = order.getStatus();
-
-        order.setStatus(OrderStatus.CANCELLED);
-        order.setCancellationReason(cancelOrderRequestDto.getReason());
-
-        order.addStatusHistory(OrderStatusHistory
-                                       .builder()
-                                       .previousStatus(previousStatus)
-                                       .newStatus(OrderStatus.CANCELLED)
-                                       .note(cancelOrderRequestDto.getReason())
-                                       .actorUserId(user.getId())
-                                       .actorEmail(user.getEmail())
-                                       .build());
-
-        Cart cart = cartRepo
-                .findByUserIdForCheckout(user.getId())
-                .orElseThrow(() -> new ApplicationException("404", "Cart not found for user",
-                                                            HttpStatus.NOT_FOUND));
-
-        cart.setStatus(CartStatus.ACTIVE);
+        Order order = orderLifecycleService.cancelPendingOrder(
+                orderNumber, user.getId(), cancelOrderRequestDto.getReason());
 
         return CommonResponseDto
                 .<OrderDetailsResponseDto>builder()
@@ -424,44 +396,6 @@ public class OrderServiceImpl implements OrderService {
                 .toUpperCase();
 
         return "PT-" + date + "-" + randomPart;
-    }
-
-    private void restoreOrderStock(Order order) {
-        if (order.isStockRestored()) {
-            return;
-        }
-
-        List<Long> variantIds = order
-                .getOrderItems()
-                .stream()
-                .map(item -> item
-                        .getVariants()
-                        .getId())
-                .distinct()
-                .sorted()
-                .toList();
-
-        Map<Long, Variants> variantsById = variantRepo
-                .findAllByIdForUpdate(variantIds)
-                .stream()
-                .collect(Collectors.toMap(Variants::getId, variant -> variant));
-
-        order
-                .getOrderItems()
-                .forEach(orderItem -> {
-                    Variants variant = variantsById.get(orderItem
-                                                                .getVariants()
-                                                                .getId());
-                    if (variant == null) {
-                        throw new ApplicationException("409", "Unable to restore stock for SKU " +
-                                                              orderItem.getSku(),
-                                                       HttpStatus.CONFLICT);
-                    }
-
-                    variant.setStockQuantity(variant.getStockQuantity() + orderItem.getQuantity());
-                });
-
-        order.setStockRestored(true);
     }
 
     // ------------------------------------------------------------------------------------

@@ -23,9 +23,23 @@ public interface PaymentRepo extends JpaRepository<Payment, Long> {
     concurrently.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select p from Payment p " + "join fetch p.order po " + "join fetch po.user pou " +
-           "where p.paymentId = :paymentId")
+    @Query("select p from Payment p where p.paymentId = :paymentId")
     Optional<Payment> findByPaymentIdForUpdate(
             @Param("paymentId")
             String paymentId);
+
+    @Query("select p.order.id from Payment p where p.paymentId = :paymentId")
+    Optional<Long> findOrderIdByPaymentId(@Param("paymentId") String paymentId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select p
+            from Payment p
+            where p.order.id = :orderId
+              and p.paymentProvider = :paymentProvider
+            """)
+    Optional<Payment> findByOrderIdAndPaymentProviderForUpdate(
+            @Param("orderId") Long orderId,
+            @Param("paymentProvider") String paymentProvider);
+
 }

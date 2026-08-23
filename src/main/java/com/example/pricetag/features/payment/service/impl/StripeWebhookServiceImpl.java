@@ -7,6 +7,7 @@ import com.example.pricetag.exceptions.ApplicationException;
 import com.example.pricetag.features.cart.repository.CartRepo;
 import com.example.pricetag.features.order.entity.Order;
 import com.example.pricetag.features.order.entity.OrderStatusHistory;
+import com.example.pricetag.features.order.repository.OrderRepo;
 import com.example.pricetag.features.payment.entity.Payment;
 import com.example.pricetag.features.payment.repository.PaymentRepo;
 import com.example.pricetag.features.payment.service.StripeWebhookService;
@@ -35,13 +36,15 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
                                                                "payment_intent.payment_failed");
 
     private final String webhookSecret;
+    private final OrderRepo orderRepo;
     private final PaymentRepo paymentRepo;
     private final CartRepo cartRepo;
 
     public StripeWebhookServiceImpl(
             @Value("${stripe.webhook-secret}")
-            String webhookSecret, PaymentRepo paymentRepo, CartRepo cartRepo) {
+            String webhookSecret, OrderRepo orderRepo, PaymentRepo paymentRepo, CartRepo cartRepo) {
         this.webhookSecret = webhookSecret;
+        this.orderRepo = orderRepo;
         this.paymentRepo = paymentRepo;
         this.cartRepo = cartRepo;
     }
@@ -77,14 +80,16 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
          */
         PaymentIntent paymentIntent = extractPaymentIntent(event);
 
-        /*
-         * Step 3: Lock and load our corresponding payment record.
-         */
+        Long orderId = paymentRepo
+                .findOrderIdByPaymentId(paymentIntent.getId())
+                .orElseThrow(() -> paymentNotFound());
+
+        /* Lock order before payment everywhere to avoid deadlocks. */
+        orderRepo.findByIdForUpdate(orderId).orElseThrow(() -> paymentNotFound());
+
         Payment payment = paymentRepo
                 .findByPaymentIdForUpdate(paymentIntent.getId())
-                .orElseThrow(() -> new ApplicationException("PAYMENT_NOT_FOUND",
-                                                            "Payment record was not found",
-                                                            HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> paymentNotFound());
 
         /*
          * Step 4: Process the event.
@@ -100,6 +105,15 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
             }
         }
 
+    }
+
+    // ========================================================================================
+    // HELPER METHODS
+    // ========================================================================================
+
+    private ApplicationException paymentNotFound() {
+        return new ApplicationException("PAYMENT_NOT_FOUND", "Payment record was not found",
+                                        HttpStatus.NOT_FOUND);
     }
 
     private Event verifyWebhook(String payload, String stripeSignature) {
