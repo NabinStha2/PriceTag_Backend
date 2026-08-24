@@ -21,6 +21,7 @@ import com.example.pricetag.features.product.repository.ProductRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +30,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class VariantServiceImpl implements VariantService {
     private final VariantRepo variantRepo;
     private final ProductRepo productRepo;
@@ -38,6 +40,7 @@ public class VariantServiceImpl implements VariantService {
     private final MediaService mediaService;
 
     @Override
+    @Transactional
     public CommonResponseDto<List<VariantResponseDto>> createVariant(
             List<VariantRequestDto> variantRequestDto, Long productId) {
         Product existingProduct = productRepo
@@ -47,8 +50,7 @@ public class VariantServiceImpl implements VariantService {
 
         List<Variants> variantList = new ArrayList<>();
         for (VariantRequestDto vDto : variantRequestDto) {
-            if (vDto.getSku() != null &&
-                variantRepo.existsBySku(vDto.getSku())) {
+            if (vDto.getSku() != null && variantRepo.existsBySku(vDto.getSku())) {
                 throw new ApplicationException("400", "Variant with the same SKU already exists",
                                                HttpStatus.BAD_REQUEST);
             }
@@ -145,6 +147,7 @@ public class VariantServiceImpl implements VariantService {
     }
 
     @Override
+    @Transactional
     public CommonResponseDto<VariantResponseDto> updateVariant(
             VariantRequestDto variantRequestDto) {
         Variants existingVariant = variantRepo
@@ -201,12 +204,12 @@ public class VariantServiceImpl implements VariantService {
     }
 
     @Override
+    @Transactional
     public CommonResponseDto<VariantResponseDto> deleteVariant(Long variantId) {
         Variants deletedVariant = variantRepo
                 .findByIdAndIsActiveTrue(variantId)
-                .orElseThrow(
-                        () -> new ApplicationException("404", "Variant not found",
-                                                       HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException("404", "Variant not found",
+                                                            HttpStatus.NOT_FOUND));
 
         variantRepo.deleteById(variantId);
 

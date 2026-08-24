@@ -26,6 +26,7 @@ import com.example.pricetag.features.order.repository.OrderRepo;
 import com.example.pricetag.features.order.service.OrderLifecycleService;
 import com.example.pricetag.features.order.service.OrderService;
 import com.example.pricetag.features.user.entity.User;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +45,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 public class OrderServiceImpl implements OrderService {
@@ -152,6 +154,9 @@ public class OrderServiceImpl implements OrderService {
                     BigDecimal totalPrice = unitPrice.multiply(
                             BigDecimal.valueOf(cartItem.getQuantity()));
 
+                    log.info("Total Price: {} for SKU: {} and quantity: {} and unit price: {}",
+                             totalPrice, variant.getSku(), cartItem.getQuantity(), unitPrice);
+
                     OrderItem orderItem = OrderItem
                             .builder()
                             .variants(variant)
@@ -180,6 +185,7 @@ public class OrderServiceImpl implements OrderService {
                     order.addOrderItem(orderItem);
                     subtotal[0] = subtotal[0].add(totalPrice);
 
+
                     /*
                * Reserve stock while payment is pending.
                * Payment failure or order expiry must add it back
@@ -187,7 +193,7 @@ public class OrderServiceImpl implements OrderService {
                */
                     variant.setStockQuantity(variant.getStockQuantity() - cartItem.getQuantity());
                 });
-
+        
         order.setShippingAmt(subtotal[0].compareTo(BigDecimal.valueOf(100)) >= 0 ? BigDecimal.ZERO :
                              BigDecimal.valueOf(10));
         order.setTaxAmt(subtotal[0].multiply(BigDecimal.valueOf(0.1))); // 10% tax
@@ -297,8 +303,8 @@ public class OrderServiceImpl implements OrderService {
     public CommonResponseDto<OrderDetailsResponseDto> cancelOrder(String orderNumber,
                                                                   CancelOrderRequestDto cancelOrderRequestDto) {
         User user = authService.getUser();
-        Order order = orderLifecycleService.cancelPendingOrder(
-                orderNumber, user.getId(), cancelOrderRequestDto.getReason());
+        Order order = orderLifecycleService.cancelPendingOrder(orderNumber, user.getId(),
+                                                               cancelOrderRequestDto.getReason());
 
         return CommonResponseDto
                 .<OrderDetailsResponseDto>builder()

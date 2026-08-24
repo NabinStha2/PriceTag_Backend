@@ -82,14 +82,16 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
 
         Long orderId = paymentRepo
                 .findOrderIdByPaymentId(paymentIntent.getId())
-                .orElseThrow(() -> paymentNotFound());
+                .orElseThrow(this::paymentNotFound);
 
         /* Lock order before payment everywhere to avoid deadlocks. */
-        orderRepo.findByIdForUpdate(orderId).orElseThrow(() -> paymentNotFound());
+        orderRepo
+                .findByIdForUpdate(orderId)
+                .orElseThrow(this::paymentNotFound);
 
         Payment payment = paymentRepo
                 .findByPaymentIdForUpdate(paymentIntent.getId())
-                .orElseThrow(() -> paymentNotFound());
+                .orElseThrow(this::paymentNotFound);
 
         /*
          * Step 4: Process the event.

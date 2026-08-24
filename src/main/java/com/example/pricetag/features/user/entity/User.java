@@ -71,7 +71,7 @@ public class User {
             cascade = CascadeType.ALL,
             orphanRemoval = true,
             fetch = FetchType.LAZY)
-    @OrderBy("createdAt ASC, id ASC")
+    @OrderBy("isDefault desc, createdAt DESC , id ASC")
     @Builder.Default
     @JsonIgnore
     private List<Address> addresses = new ArrayList<>();
