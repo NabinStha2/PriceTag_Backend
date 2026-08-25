@@ -1,11 +1,27 @@
-#FROM maven:3.9.4-openjdk-21 AS build
-FROM maven:3.9.4-eclipse-temurin-21 AS build
-COPY . .
-RUN mvn clean package -DskipTests
+FROM eclipse-temurin:21-jdk-jammy AS build
 
-#FROM openjdk:21-jdk-slim AS runtime
-FROM eclipse-temurin:21-jdk-jammy
+WORKDIR /app
 
-COPY --from=build /target/pricetag-0.0.1-SNAPSHOT.jar pricetag.jar
+COPY .mvn .mvn
+COPY mvnw pom.xml ./
+RUN chmod +x mvnw && ./mvnw -B dependency:go-offline
+
+COPY src src
+RUN ./mvnw -B clean package -DskipTests
+
+
+FROM eclipse-temurin:21-jre-jammy
+
+WORKDIR /app
+
+RUN groupadd --system spring \
+  && useradd --system --gid spring spring
+
+COPY --from=build --chown=spring:spring \
+  /app/target/pricetag-*.jar app.jar
+
+USER spring
+
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","pricetag.jar"]
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
