@@ -32,6 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 
+/mysql-data/
 .junie/
 .env
 src/main/java/com/example/pricetag/request
