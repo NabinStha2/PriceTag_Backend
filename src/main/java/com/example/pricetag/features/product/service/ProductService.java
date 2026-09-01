@@ -6,11 +6,9 @@ import com.example.pricetag.features.product.dto.request.CreateProductRequestDto
 import com.example.pricetag.features.product.dto.response.ProductResponseDto;
 import com.example.pricetag.features.product.dto.response.SingleProductDetailsResponseDto;
 import com.example.pricetag.features.subcategory.dto.response.SubCategoryResponseDto;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 public interface ProductService {
 
     CommonResponseDto<ProductResponseDto> createProduct(

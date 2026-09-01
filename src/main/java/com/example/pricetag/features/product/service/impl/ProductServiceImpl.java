@@ -41,6 +41,7 @@ import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepo productRepo;
@@ -168,7 +169,6 @@ public class ProductServiceImpl implements ProductService {
 
 
     @Override
-    @Transactional
     public CommonResponseDto<ProductResponseDto> editProduct(
             CreateProductRequestDto createProductRequestDto) {
         Product existingProduct = productRepo
@@ -213,7 +213,6 @@ public class ProductServiceImpl implements ProductService {
 
 
     @Override
-    @Transactional
     public CommonResponseDto<ProductResponseDto> createProduct(
             CreateProductRequestDto createProductRequestDto) {
         Long categoryId = createProductRequestDto.getCategoryId();
@@ -287,8 +286,8 @@ public class ProductServiceImpl implements ProductService {
                                              .toString());
 
         // Safely set primary image URL if available
-        List<MediaResponseDto> medias = mediaService.getmedias(
-                savedProduct.getId(), EntityType.PRODUCT);
+        List<MediaResponseDto> medias = mediaService.getmedias(savedProduct.getId(),
+                                                               EntityType.PRODUCT);
         if (medias != null && !medias.isEmpty()) {
             savedProduct.setPrimaryImageUrl(medias
                                                     .getFirst()
@@ -308,6 +307,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CommonResponseDto<List<ProductResponseDto>> getProductsWithSubCategoryId(
             SubCategoryResponseDto subCategoryResponseDto,
             PaginationRequestDto paginationRequestDto) {
@@ -333,6 +333,7 @@ public class ProductServiceImpl implements ProductService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public CommonResponseDto<List<ProductResponseDto>> getAllProducts(
             PaginationRequestDto paginationRequestDto) {
         Pageable pageable = PageableBuilder.buildPageable(paginationRequestDto);
@@ -354,10 +355,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CommonResponseDto<List<ProductResponseDto>> getSearchProductsWithSubCategoryIdAndName(
             SubCategoryResponseDto subCategoryResponseDto,
-            PaginationRequestDto paginationRequestDto,
-            String name) {
+            PaginationRequestDto paginationRequestDto, String name) {
         Pageable pageable = PageableBuilder.buildPageable(paginationRequestDto);
         if (subCategoryRepo.existsSubCategoryById(subCategoryResponseDto.getId())) {
             Page<Product> productsList = productRepo.findAllBySubCategoryIdAndNameContainingIgnoreCase(

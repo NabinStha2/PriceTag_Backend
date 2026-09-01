@@ -1,5 +1,6 @@
 package com.example.pricetag.features.user.entity;
 
+import com.example.pricetag.entity.BaseEntity;
 import com.example.pricetag.features.address.entity.Address;
 import com.example.pricetag.features.auth.entity.Role;
 import com.example.pricetag.features.cart.entity.Cart;
@@ -8,8 +9,7 @@ import com.example.pricetag.features.ratingReview.entity.RatingReview;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Builder
+@SuperBuilder
 @Entity
 @Table(name = "users",
         indexes = {@Index(columnList = "email",
@@ -26,12 +26,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+public class User extends BaseEntity {
     @Column(name = "name",
             length = 100,
             nullable = false)
@@ -103,15 +98,6 @@ public class User {
             nullable = false)
     @Builder.Default
     private Boolean isDeleted = false;
-
-    @CreationTimestamp
-    @Column(updatable = false,
-            name = "created_at")
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;

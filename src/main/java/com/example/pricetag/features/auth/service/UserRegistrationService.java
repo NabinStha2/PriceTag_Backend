@@ -9,6 +9,7 @@ import com.example.pricetag.features.auth.repository.RoleRepository;
 import com.example.pricetag.features.user.entity.User;
 import com.example.pricetag.utils.ColorLogger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -46,18 +47,11 @@ public class UserRegistrationService {
             throw new ApplicationException("400", "Email already exists", HttpStatus.BAD_REQUEST);
         }
 
+        Role userRole = getOrCreateDefaultRole();
+
         if (existingUser != null) {
             authRepository.delete(existingUser);
         }
-
-        // Look up the existing ROLE_USER row instead of building a new,
-        // unmanaged Role every time someone registers. Building a new one
-        // (as before) either fails to save (no cascade configured on
-        // User.roles) or creates a fresh duplicate role row per user.
-        Role userRole = roleRepository
-                .findByName(AppUserRole.ROLE_USER.name())
-                .orElseThrow(() -> new ApplicationException("500", "Default role not configured",
-                                                            HttpStatus.INTERNAL_SERVER_ERROR));
 
         User newUser = new User();
         newUser.setEmail(registerRequestDto.getEmail());
@@ -71,6 +65,30 @@ public class UserRegistrationService {
         ColorLogger.logInfo("Created new user with id: " + savedUser.getId());
 
         return savedUser;
+    }
+
+    private Role getOrCreateDefaultRole() {
+        String roleName = AppUserRole.ROLE_USER.name();
+
+        return roleRepository
+                .findByName(roleName)
+                .orElseGet(() -> {
+                    try {
+                        Role createdRole = roleRepository.saveAndFlush(
+                                Role.builder().name(roleName).build());
+                        ColorLogger.logInfo("Created missing default role: " + roleName);
+                        return createdRole;
+                    } catch (DataIntegrityViolationException exception) {
+                        // Another registration may have created the unique role
+                        // after our lookup. Reuse that row instead of failing.
+                        return roleRepository
+                                .findByName(roleName)
+                                .orElseThrow(() -> new ApplicationException(
+                                        "DEFAULT_ROLE_CONFIGURATION_FAILED",
+                                        "Default role could not be configured",
+                                        HttpStatus.INTERNAL_SERVER_ERROR));
+                    }
+                });
     }
 
     public void initiateRegistration(RegisterRequestDto registerRequestDto)
