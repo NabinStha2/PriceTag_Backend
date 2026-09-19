@@ -4,6 +4,7 @@ import com.example.pricetag.enums.AppUserRole;
 import com.example.pricetag.utils.ColorLogger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -26,39 +27,68 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Central Spring Security configuration.
- * <p>
- * How to read this file, top to bottom:
- * 1. Three URL lists below decide WHO can call WHICH endpoints.
- * 2. securityFilterChain() wires those lists into Spring Security and
- * tells it how to check passwords (authenticationProvider) and how
- * to check JWTs (jwtFilter).
- * 3. The rest are small supporting beans (password hashing, CORS).
- * <p>
- * IMPORTANT PATTERN NOTE:
- * These arrays use Ant-style path patterns, NOT Spring MVC's {name} URI
- * template syntax. That means:
- * - "*"  matches exactly one path segment (e.g. "/product/*" matches
- * "/product/5" but not "/product/5/edit")
- * - "**" matches any number of segments
- * - "{categoryId}" is NOT special here — Spring Security would treat it
- * as a literal string and it would never match a real numeric id.
- * Always use "*" or "**" in these three arrays, never "{...}".
+ * Endpoint access rules, grouped by HTTP method and required role.
+ * Keep these paths aligned with controller mappings. A single '*' matches
+ * one path segment; reads and writes to the same path have separate rules.
  */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    // Anyone can call these without logging in.
-    private static final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/verify-otp", "/api/v1/auth/forgot-password", "/api/v1/auth/verify-forgot-password-otp", "/api/v1/auth/welcome", "/", "/actuator/health", "/swagger-ui/**", "/v3/api-docs/**", "/api/v1/payments/stripe/webhook"};
+    private static final String[] PUBLIC_GET_ENDPOINTS = {
+            "/", "/api/v1/auth/welcome", "/actuator/health",
+            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**"
+    };
 
-    // Only users with ROLE_ADMIN can call these.
-    private static final String[] ADMIN_ENDPOINTS = {"/api/v1/category/add", "/api/v1/subcategory/*/add", "/api/v1/subcategory/edit", "/api/v1/product/category/*/subcategory/*/add", // was "{categoryId}" - fixed, see note above
-                                                     "/api/v1/image/upload", "/api/v1/variant/edit/*", "/api/v1/variant/product/*"};
+    private static final String[] PUBLIC_POST_ENDPOINTS = {
+            "/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/verify-otp",
+            "/api/v1/auth/forgot-password", "/api/v1/auth/refreshToken",
+            "/api/v1/payments/stripe/webhook"
+    };
 
-    // Any logged-in user (USER or ADMIN) can call these.
-    private static final String[] USER_ENDPOINTS = {"/user/**", "/api/v1/category/*", "/api/v1/subcategory/*", "/api/v1/product/*", "/api/v1/variant/", "/api/v1/variant/*", "/api/v1/orders/*"};
+    // Catalog changes are admin-only; catalog reads below still require login.
+    private static final String[] ADMIN_POST_ENDPOINTS = {
+            "/api/v1/category/add", "/api/v1/subcategory/*/add",
+            "/api/v1/product/category/*/subcategory/*/add", "/api/v1/variant/product/*"
+    };
+
+    private static final String[] ADMIN_PATCH_ENDPOINTS = {
+            "/api/v1/category/update/*", "/api/v1/subcategory/edit",
+            "/api/v1/product/*", "/api/v1/variant/edit/*"
+    };
+
+    private static final String[] ADMIN_DELETE_ENDPOINTS = {
+            "/api/v1/category/*", "/api/v1/subcategory/*",
+            "/api/v1/product/*", "/api/v1/variant/"
+    };
+
+    private static final String[] USER_GET_ENDPOINTS = {
+            "/api/v1/user/", "/api/v1/category/", "/api/v1/category/*",
+            "/api/v1/subcategory", "/api/v1/subcategory/*",
+            "/api/v1/product", "/api/v1/product/*", "/api/v1/product/subcategory/*",
+            "/api/v1/product/subcategory/*/search",
+            "/api/v1/variant/", "/api/v1/variant/*", "/api/v1/variant/product/*",
+            "/api/v1/cart", "/api/v1/address", "/api/v1/orders", "/api/v1/orders/*",
+            "/api/v1/rating-review/*", "/api/v1/rating-review/product/*",
+            "/api/v1/rating-review/user/product/*"
+    };
+
+    private static final String[] USER_POST_ENDPOINTS = {
+            "/api/v1/cart/items", "/api/v1/address", "/api/v1/orders",
+            "/api/v1/orders/*/cancel", "/api/v1/orders/*/payment-intent",
+            "/api/v1/rating-review/add/product/*"
+    };
+
+    private static final String[] USER_PATCH_ENDPOINTS = {
+            "/api/v1/user/edit", "/api/v1/cart/item/*", "/api/v1/address/*",
+            "/api/v1/address/*/default", "/api/v1/rating-review/update/*"
+    };
+
+    private static final String[] USER_DELETE_ENDPOINTS = {
+            "/api/v1/cart", "/api/v1/cart/item/*", "/api/v1/address/*",
+            "/api/v1/rating-review/*"
+    };
 
     // Turns AppUserRole.ROLE_ADMIN into "ADMIN", because Spring's hasRole()
     // adds the "ROLE_" prefix back on automatically - passing "ROLE_ADMIN"
@@ -84,18 +114,39 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_ENDPOINTS)
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS)
                         .permitAll()
-                        .requestMatchers(ADMIN_ENDPOINTS)
+                        .requestMatchers(HttpMethod.HEAD, PUBLIC_GET_ENDPOINTS)
+                        .permitAll()
+                        // Refresh tokens and Stripe signatures are validated by their services.
+                        .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS)
+                        .permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/auth/verify-forgot-password-otp")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.POST, ADMIN_POST_ENDPOINTS)
                         .hasRole(extractRole(AppUserRole.ROLE_ADMIN))
-                        .requestMatchers(USER_ENDPOINTS)
+                        .requestMatchers(HttpMethod.PATCH, ADMIN_PATCH_ENDPOINTS)
+                        .hasRole(extractRole(AppUserRole.ROLE_ADMIN))
+                        .requestMatchers(HttpMethod.DELETE, ADMIN_DELETE_ENDPOINTS)
+                        .hasRole(extractRole(AppUserRole.ROLE_ADMIN))
+                        .requestMatchers(HttpMethod.GET, USER_GET_ENDPOINTS)
                         .hasAnyRole(extractRole(AppUserRole.ROLE_USER),
                                     extractRole(AppUserRole.ROLE_ADMIN))
-                        // Anything not listed above still requires SOME logged-in
-                        // user. This is your safety net - new endpoints are locked
-                        // down by default until you explicitly open them up above.
+                        .requestMatchers(HttpMethod.HEAD, USER_GET_ENDPOINTS)
+                        .hasAnyRole(extractRole(AppUserRole.ROLE_USER),
+                                    extractRole(AppUserRole.ROLE_ADMIN))
+                        .requestMatchers(HttpMethod.POST, USER_POST_ENDPOINTS)
+                        .hasAnyRole(extractRole(AppUserRole.ROLE_USER),
+                                    extractRole(AppUserRole.ROLE_ADMIN))
+                        .requestMatchers(HttpMethod.PATCH, USER_PATCH_ENDPOINTS)
+                        .hasAnyRole(extractRole(AppUserRole.ROLE_USER),
+                                    extractRole(AppUserRole.ROLE_ADMIN))
+                        .requestMatchers(HttpMethod.DELETE, USER_DELETE_ENDPOINTS)
+                        .hasAnyRole(extractRole(AppUserRole.ROLE_USER),
+                                    extractRole(AppUserRole.ROLE_ADMIN))
+                        // New endpoints require an explicit access rule before use.
                         .anyRequest()
-                        .authenticated())
+                        .denyAll())
                 // No HTTP sessions - every request must prove itself with a JWT.
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -23,7 +23,6 @@ public class PaymentController {
     public ResponseEntity<CommonResponseDto<InitializePaymentResponseDto>> initializePayment(
             @PathVariable
             String orderNumber) {
-
         return ResponseEntity.ok(paymentService.initializePayment(orderNumber));
     }
 }
