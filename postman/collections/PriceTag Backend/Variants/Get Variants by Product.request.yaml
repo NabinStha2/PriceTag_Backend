@@ -1,0 +1,8 @@
+$kind: http-request
+name: Get Variants by Product
+order: 3000
+method: GET
+url: '{{baseUrl}}/api/v1/variant/product/{{productId}}'
+pathVariables:
+  - key: productId
+    value: '1'

@@ -36,59 +36,24 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private static final String[] PUBLIC_GET_ENDPOINTS = {
-            "/", "/api/v1/auth/welcome", "/actuator/health",
-            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**"
-    };
+    private static final String[] PUBLIC_GET_ENDPOINTS = {"/", "/api/v1/auth/welcome", "/actuator/health", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**"};
 
-    private static final String[] PUBLIC_POST_ENDPOINTS = {
-            "/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/verify-otp",
-            "/api/v1/auth/forgot-password", "/api/v1/auth/refreshToken",
-            "/api/v1/payments/stripe/webhook"
-    };
+    private static final String[] PUBLIC_POST_ENDPOINTS = {"/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/verify-otp", "/api/v1/auth/forgot-password", "/api/v1/auth/refreshToken", "/api/v1/payments/stripe/webhook"};
 
     // Catalog changes are admin-only; catalog reads below still require login.
-    private static final String[] ADMIN_POST_ENDPOINTS = {
-            "/api/v1/category/add", "/api/v1/subcategory/*/add",
-            "/api/v1/product/category/*/subcategory/*/add", "/api/v1/variant/product/*"
-    };
+    private static final String[] ADMIN_POST_ENDPOINTS = {"/api/v1/category/add", "/api/v1/subcategory/*/add", "/api/v1/product/category/*/subcategory/*/add", "/api/v1/variant/product/*"};
 
-    private static final String[] ADMIN_PATCH_ENDPOINTS = {
-            "/api/v1/category/update/*", "/api/v1/subcategory/edit",
-            "/api/v1/product/*", "/api/v1/variant/edit/*"
-    };
+    private static final String[] ADMIN_PATCH_ENDPOINTS = {"/api/v1/category/update/*", "/api/v1/subcategory/edit", "/api/v1/product/*", "/api/v1/variant/edit/*"};
 
-    private static final String[] ADMIN_DELETE_ENDPOINTS = {
-            "/api/v1/category/*", "/api/v1/subcategory/*",
-            "/api/v1/product/*", "/api/v1/variant/"
-    };
+    private static final String[] ADMIN_DELETE_ENDPOINTS = {"/api/v1/category/*", "/api/v1/subcategory/*", "/api/v1/product/*", "/api/v1/variant/"};
 
-    private static final String[] USER_GET_ENDPOINTS = {
-            "/api/v1/user/", "/api/v1/category/", "/api/v1/category/*",
-            "/api/v1/subcategory", "/api/v1/subcategory/*",
-            "/api/v1/product", "/api/v1/product/*", "/api/v1/product/subcategory/*",
-            "/api/v1/product/subcategory/*/search",
-            "/api/v1/variant/", "/api/v1/variant/*", "/api/v1/variant/product/*",
-            "/api/v1/cart", "/api/v1/address", "/api/v1/orders", "/api/v1/orders/*",
-            "/api/v1/rating-review/*", "/api/v1/rating-review/product/*",
-            "/api/v1/rating-review/user/product/*"
-    };
+    private static final String[] USER_GET_ENDPOINTS = {"/api/v1/user/", "/api/v1/category/", "/api/v1/category/*", "/api/v1/subcategory", "/api/v1/subcategory/*", "/api/v1/product", "/api/v1/product/*", "/api/v1/product/subcategory/*", "/api/v1/product/subcategory/*/search", "/api/v1/variant/", "/api/v1/variant/*", "/api/v1/variant/product/*", "/api/v1/cart", "/api/v1/address", "/api/v1/orders", "/api/v1/orders/*", "/api/v1/rating-review/*", "/api/v1/rating-review/product/*", "/api/v1/rating-review/user/product/*"};
 
-    private static final String[] USER_POST_ENDPOINTS = {
-            "/api/v1/cart/items", "/api/v1/address", "/api/v1/orders",
-            "/api/v1/orders/*/cancel", "/api/v1/orders/*/payment-intent",
-            "/api/v1/rating-review/add/product/*"
-    };
+    private static final String[] USER_POST_ENDPOINTS = {"/api/v1/cart/items", "/api/v1/address", "/api/v1/orders", "/api/v1/orders/*/cancel", "/api/v1/orders/*/payment-intent", "/api/v1/rating-review/add/product/*"};
 
-    private static final String[] USER_PATCH_ENDPOINTS = {
-            "/api/v1/user/edit", "/api/v1/cart/item/*", "/api/v1/address/*",
-            "/api/v1/address/*/default", "/api/v1/rating-review/update/*"
-    };
+    private static final String[] USER_PATCH_ENDPOINTS = {"/api/v1/user/edit", "/api/v1/cart/item/*", "/api/v1/address/*", "/api/v1/address/*/default", "/api/v1/rating-review/update/*"};
 
-    private static final String[] USER_DELETE_ENDPOINTS = {
-            "/api/v1/cart", "/api/v1/cart/item/*", "/api/v1/address/*",
-            "/api/v1/rating-review/*"
-    };
+    private static final String[] USER_DELETE_ENDPOINTS = {"/api/v1/cart", "/api/v1/cart/item/*", "/api/v1/address/*", "/api/v1/rating-review/*"};
 
     // Turns AppUserRole.ROLE_ADMIN into "ADMIN", because Spring's hasRole()
     // adds the "ROLE_" prefix back on automatically - passing "ROLE_ADMIN"
@@ -121,7 +86,8 @@ public class SecurityConfig {
                         // Refresh tokens and Stripe signatures are validated by their services.
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS)
                         .permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/auth/verify-forgot-password-otp")
+                        .requestMatchers(HttpMethod.PATCH,
+                                         "/api/v1/auth/verify-forgot-password-otp")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, ADMIN_POST_ENDPOINTS)
                         .hasRole(extractRole(AppUserRole.ROLE_ADMIN))

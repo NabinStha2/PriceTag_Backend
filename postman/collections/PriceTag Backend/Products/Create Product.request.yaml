@@ -1,0 +1,35 @@
+$kind: http-request
+name: Create Product
+order: 5000
+method: POST
+url: '{{baseUrl}}/api/v1/product/category/{{categoryId}}/subcategory/{{subCategoryId}}/add'
+pathVariables:
+  - key: categoryId
+    value: '1'
+  - key: subCategoryId
+    value: '1'
+body:
+  type: formdata
+  content:
+    - key: name
+      type: text
+      value: 'Classic T-Shirt'
+    - key: description
+      type: text
+      value: 'A comfortable classic t-shirt'
+    - key: shortDescription
+      type: text
+      value: 'Classic tee'
+    - key: brand
+      type: text
+      value: 'PriceTag'
+    - key: basePrice
+      type: text
+      value: '29.99'
+    - key: discountedPrice
+      type: text
+      value: '24.99'
+    - key: images
+      type: text
+      value: ''
+      description: Product images (multipart files)

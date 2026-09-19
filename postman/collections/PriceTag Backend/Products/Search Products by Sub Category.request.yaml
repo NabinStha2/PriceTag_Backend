@@ -1,0 +1,21 @@
+$kind: http-request
+name: Search Products by Sub Category
+order: 4000
+method: GET
+url: '{{baseUrl}}/api/v1/product/subcategory/{{subCategoryId}}/search'
+pathVariables:
+  - key: subCategoryId
+    value: '1'
+queryParams:
+  - key: page
+    value: '1'
+  - key: limit
+    value: '10'
+  - key: name
+    value: shirt
+  - key: sortBy
+    value: ''
+    disabled: true
+  - key: order
+    value: ''
+    disabled: true

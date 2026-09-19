@@ -1,0 +1,25 @@
+$kind: http-request
+name: Create Variants
+order: 4000
+method: POST
+url: '{{baseUrl}}/api/v1/variant/product/{{productId}}'
+pathVariables:
+  - key: productId
+    value: '1'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    [
+      {
+        "sizeId": 1,
+        "colorId": 1,
+        "sku": "TSHIRT-RED-M",
+        "stockQuantity": 50,
+        "actualPrice": 29.99,
+        "discountedPrice": 24.99,
+        "weightInGrams": 200
+      }
+    ]

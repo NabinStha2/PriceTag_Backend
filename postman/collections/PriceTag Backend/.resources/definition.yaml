@@ -1,0 +1,8 @@
+$kind: collection
+name: PriceTag Backend
+description: 'PriceTag e-commerce backend API collection. Base URL: {{baseUrl}}. All protected endpoints require Bearer token auth.'
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{accessToken}}'

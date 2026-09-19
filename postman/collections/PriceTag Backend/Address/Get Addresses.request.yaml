@@ -1,0 +1,8 @@
+$kind: http-request
+auth:
+  type: inherit
+  credentials:
+    id: collection-ac9B844cE4Cfcc5A27825a43-bearer
+order: 1000
+method: GET
+url: "{{baseUrl}}/api/v1/address"

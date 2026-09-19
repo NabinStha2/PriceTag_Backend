@@ -1,0 +1,15 @@
+$kind: http-request
+name: Create Category
+order: 3000
+method: POST
+url: '{{baseUrl}}/api/v1/category/add'
+body:
+  type: formdata
+  content:
+    - key: name
+      type: text
+      value: Electronics
+    - key: file
+      type: text
+      value: ''
+      description: Category image file

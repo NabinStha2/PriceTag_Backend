@@ -1,0 +1,8 @@
+$kind: http-request
+name: Get Review by ID
+order: 2000
+method: GET
+url: '{{baseUrl}}/api/v1/rating-review/{{id}}'
+pathVariables:
+  - key: id
+    value: '1'

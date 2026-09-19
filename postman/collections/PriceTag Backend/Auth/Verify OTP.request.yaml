@@ -1,0 +1,15 @@
+$kind: http-request
+name: Verify OTP
+order: 2000
+method: POST
+url: '{{baseUrl}}/api/v1/auth/verify-otp'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "user@example.com",
+      "otpCode": 123456
+    }

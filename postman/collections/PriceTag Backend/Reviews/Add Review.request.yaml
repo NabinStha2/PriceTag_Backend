@@ -1,0 +1,18 @@
+$kind: http-request
+name: Add Review
+order: 1000
+method: POST
+url: '{{baseUrl}}/api/v1/rating-review/add/product/{{productId}}'
+pathVariables:
+  - key: productId
+    value: '1'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "rating": 4.5,
+      "review": "Great product, very comfortable!"
+    }

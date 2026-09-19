@@ -1,0 +1,3 @@
+$kind: collection
+name: Orders
+description: Order management endpoints.

@@ -1,0 +1,18 @@
+$kind: http-request
+name: Update Category Image
+order: 5000
+method: PATCH
+url: '{{baseUrl}}/api/v1/category/update/image'
+queryParams:
+  - key: entityType
+    value: CATEGORY
+body:
+  type: formdata
+  content:
+    - key: entityId
+      type: text
+      value: '1'
+    - key: file
+      type: text
+      value: ''
+      description: Image file
