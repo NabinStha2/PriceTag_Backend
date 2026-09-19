@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.mockito.Mockito.mock;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -171,6 +172,11 @@ class SecurityConfigTest {
     @EnableWebMvc
     @Import({SecurityConfig.class, JwtFilter.class, EndpointStub.class})
     static class TestWebConfiguration {
+        @Bean
+        JsonMapper jsonMapper() {
+            return JsonMapper.builder().build();
+        }
+
         @Bean
         UserDetailsService userDetailsService() {
             return mock(UserDetailsService.class);

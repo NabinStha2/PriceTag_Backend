@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm" version="3.2">
+    <!-- Only index names differ from the annotations, to support H2's schema-wide namespace. -->
+    <entity class="com.example.pricetag.features.subcategory.entity.SubCategory" access="FIELD">
+        <table name="sub_categories">
+            <unique-constraint>
+                <column-name>category_id</column-name>
+                <column-name>name</column-name>
+                <column-name>is_deleted</column-name>
+            </unique-constraint>
+            <index name="idx_sub_categories_category_id" column-list="category_id"/>
+            <index name="idx_sub_categories_category_name" column-list="category_id, name"/>
+        </table>
+    </entity>
+    <entity class="com.example.pricetag.features.Variant.entity.Variants" access="FIELD">
+        <table name="variants">
+            <unique-constraint>
+                <column-name>size_id</column-name>
+                <column-name>color_id</column-name>
+                <column-name>product_id</column-name>
+            </unique-constraint>
+            <index name="idx_variants_product_id" column-list="product_id"/>
+            <index name="idx_sku" column-list="sku"/>
+            <index name="idx_color_id" column-list="color_id"/>
+            <index name="idx_size_id" column-list="size_id"/>
+        </table>
+    </entity>
+</entity-mappings>

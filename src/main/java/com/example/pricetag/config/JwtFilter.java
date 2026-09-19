@@ -3,7 +3,6 @@ package com.example.pricetag.config;
 import com.example.pricetag.dto.CommonResponseDto;
 import com.example.pricetag.features.auth.service.JwtService;
 import com.example.pricetag.utils.ColorLogger;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -19,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 
@@ -36,11 +36,14 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final JsonMapper jsonMapper;
 
     @Autowired
-    public JwtFilter(JwtService jwtService, UserDetailsService userDetailsService) {
+    public JwtFilter(JwtService jwtService, UserDetailsService userDetailsService,
+                     JsonMapper jsonMapper) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.jsonMapper = jsonMapper;
     }
 
     @Override
@@ -96,6 +99,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 .message(message)
                 .status(HttpStatus.UNAUTHORIZED.value())
                 .build();
-        new ObjectMapper().writeValue(response.getOutputStream(), responseDto);
+        jsonMapper.writeValue(response.getOutputStream(), responseDto);
     }
 }
