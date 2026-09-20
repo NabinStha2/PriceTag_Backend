@@ -1,16 +1,27 @@
 $kind: http-request
 name: Get All Orders
+description: Lists the signed-in user's orders. Disable status to include all order statuses.
 order: 1000
 method: GET
-url: '{{baseUrl}}/api/v1/orders'
+url: "{{baseUrl}}/api/v1/orders?page=1&limit=10&status=pending_payment"
 queryParams:
   - key: page
-    value: '1'
+    value: "1"
+    disabled: false
+    description: ""
   - key: limit
-    value: '10'
+    value: "10"
+    disabled: false
+    description: ""
   - key: sortBy
-    value: ''
+    value: ""
     disabled: true
+    description: ""
   - key: order
-    value: ''
+    value: ""
     disabled: true
+    description: ""
+  - key: status
+    value: pending_payment
+    disabled: false
+    description: "Case-insensitive: PENDING_PAYMENT, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED, EXPIRED, REFUNDED. Disable to list all statuses."

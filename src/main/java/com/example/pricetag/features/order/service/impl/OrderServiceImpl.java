@@ -277,6 +277,7 @@ public class OrderServiceImpl implements OrderService {
                          paginationRequestDto.getOrder() : Sort.Direction.DESC.name();
 
 
+
         /*
          * API pages start at 1, but Spring Data pages start at 0.
          */
@@ -291,7 +292,13 @@ public class OrderServiceImpl implements OrderService {
                 Sort.Direction.DESC;
 
         Pageable pageable = PageRequest.of(page, limit, Sort.by(dir, sortBy));
-        Page<Order> orderPage = orderRepo.findAllByUserId(user.getId(), pageable);
+
+        OrderStatus requestedStatus = parseOrderStatus(
+                paginationRequestDto != null ? paginationRequestDto.getStatus() : null);
+
+        Page<Order> orderPage =
+                requestedStatus == null ? orderRepo.findAllByUserId(user.getId(), pageable) :
+                orderRepo.findAllByUserIdAndStatus(user.getId(), requestedStatus, pageable);
 
         List<OrderSummaryResponseDto> orderSummaryResponseDtosList = orderMapper.mapOrderListToOrderSummaryResponseDtoList(
                 orderPage.getContent());
@@ -476,6 +483,21 @@ public class OrderServiceImpl implements OrderService {
                     .formatHex(hash);
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException("SHA-256 is not available", exception);
+        }
+    }
+
+    private OrderStatus parseOrderStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
+        try {
+            return OrderStatus.valueOf(status
+                                               .trim()
+                                               .toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw new ApplicationException("INVALID_ORDER_STATUS",
+                                           "Invalid order status: " + status,
+                                           HttpStatus.BAD_REQUEST);
         }
     }
 

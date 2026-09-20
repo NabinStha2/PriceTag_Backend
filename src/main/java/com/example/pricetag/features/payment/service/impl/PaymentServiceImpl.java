@@ -103,6 +103,8 @@ public class PaymentServiceImpl implements PaymentService {
                 order.setPaymentReference(paymentIntent.getId());
             }
 
+            validatePaymentIntentForCheckout(paymentIntent, order);
+
             InitializePaymentResponseDto initializePaymentResponseDto = InitializePaymentResponseDto
                     .builder()
                     .orderNumber(order.getOrderNumber())
@@ -187,32 +189,128 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void validateOrderForPayment(Order order) {
-        if (order.getStatus() == null || !order
-                .getStatus()
-                .equals(OrderStatus.PENDING_PAYMENT)) {
-            throw new ApplicationException("409", "Order is not in a valid state for payment",
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new ApplicationException("ORDER_NOT_PAYABLE", "Order is not waiting for payment",
+                                           HttpStatus.CONFLICT);
+        }
+
+        if (order.getPaymentStatus() != PaymentStatus.PENDING) {
+            throw new ApplicationException("ORDER_PAYMENT_NOT_PENDING",
+                                           "Order payment is no longer pending",
+                                           HttpStatus.CONFLICT);
+        }
+
+        if (order.getExpiresAt() == null) {
+            throw new ApplicationException("ORDER_EXPIRY_MISSING",
+                                           "Order does not have a valid payment deadline",
                                            HttpStatus.CONFLICT);
         }
 
         if (!order
-                .getPaymentStatus()
-                .equals(PaymentStatus.PENDING)) {
-            throw new ApplicationException("409", "Payment has already been processed",
-                                           HttpStatus.CONFLICT);
-        }
-
-        if (order.getExpiresAt() != null && !order
                 .getExpiresAt()
                 .isAfter(LocalDateTime.now())) {
-            throw new ApplicationException("409", "Order payment session has expired",
+            throw new ApplicationException("ORDER_PAYMENT_EXPIRED",
+                                           "Order payment session has expired",
                                            HttpStatus.CONFLICT);
         }
 
         if (order.getTotalAmt() == null || order
                                                    .getTotalAmt()
-                                                   .compareTo(BigDecimal.ZERO) <= 0) {
+                                                   .signum() <= 0) {
+            throw new ApplicationException("INVALID_PAYMENT_AMOUNT",
+                                           "Order has an invalid payment amount",
+                                           HttpStatus.CONFLICT);
+        }
 
-            throw new ApplicationException("409", "Order has an invalid payment amount",
+        if (order.getCurrency() == null || order
+                .getCurrency()
+                .isBlank()) {
+            throw new ApplicationException("INVALID_PAYMENT_CURRENCY",
+                                           "Order has an invalid payment currency",
+                                           HttpStatus.CONFLICT);
+        }
+    }
+
+
+    private void validatePaymentIntentForCheckout(PaymentIntent paymentIntent, Order order) {
+
+        // Verify the intent still represents this order's amount.
+        long expectedAmount = convertToMinorUnit(order.getTotalAmt());
+
+        if (paymentIntent.getAmount() == null || paymentIntent.getAmount() != expectedAmount ||
+            !order
+                    .getCurrency()
+                    .equalsIgnoreCase(paymentIntent.getCurrency())) {
+
+            throw new ApplicationException("PAYMENT_DETAILS_MISMATCH",
+                                           "Payment details do not match this order",
+                                           HttpStatus.CONFLICT);
+        }
+
+        // Verify the association recorded when creating the intent.
+        var metadata = paymentIntent.getMetadata();
+
+        if (metadata == null || !order
+                .getId()
+                .toString()
+                .equals(metadata.get("order_id")) || !order
+                .getUser()
+                .getId()
+                .toString()
+                .equals(metadata.get("user_id"))) {
+
+            throw new ApplicationException("PAYMENT_ORDER_MISMATCH",
+                                           "Payment does not belong to this order",
+                                           HttpStatus.CONFLICT);
+        }
+
+        String status = paymentIntent.getStatus();
+
+        if (status == null) {
+            throw new ApplicationException("INVALID_PAYMENT_STATE",
+                                           "Unable to determine the payment state",
+                                           HttpStatus.CONFLICT);
+        }
+
+        switch (status) {
+            case "requires_payment_method", "requires_confirmation", "requires_action" -> {
+                // These states may continue through the client SDK.
+            }
+
+            case "processing" -> throw new ApplicationException("PAYMENT_PROCESSING",
+                                                                "Payment is processing. Check the order status shortly.",
+                                                                HttpStatus.CONFLICT);
+
+            case "succeeded" -> throw new ApplicationException("PAYMENT_ALREADY_SUCCEEDED",
+                                                               "Payment succeeded. Refresh the order status.",
+                                                               HttpStatus.CONFLICT);
+
+            case "canceled" -> throw new ApplicationException("PAYMENT_CANCELLED",
+                                                              "This payment session was cancelled and cannot be resumed.",
+                                                              HttpStatus.CONFLICT);
+
+            case "requires_capture" -> throw new ApplicationException("PAYMENT_AWAITING_CAPTURE",
+                                                                      "Payment is already authorized and awaiting capture.",
+                                                                      HttpStatus.CONFLICT);
+
+            default -> throw new ApplicationException("UNSUPPORTED_PAYMENT_STATE",
+                                                      "This payment cannot currently be resumed.",
+                                                      HttpStatus.CONFLICT);
+        }
+
+        // Your current PaymentSheet flow uses automatic confirmation.
+        if (!"automatic".equals(paymentIntent.getConfirmationMethod())) {
+            throw new ApplicationException("UNSUPPORTED_CONFIRMATION_METHOD",
+                                           "This payment requires a different confirmation flow.",
+                                           HttpStatus.CONFLICT);
+        }
+
+        if (paymentIntent.getClientSecret() == null || paymentIntent
+                .getClientSecret()
+                .isBlank()) {
+
+            throw new ApplicationException("PAYMENT_SECRET_UNAVAILABLE",
+                                           "Unable to resume this payment session.",
                                            HttpStatus.CONFLICT);
         }
     }

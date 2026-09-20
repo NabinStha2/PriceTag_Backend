@@ -1,5 +1,6 @@
 package com.example.pricetag.features.order.repository;
 
+import com.example.pricetag.enums.OrderStatus;
 import com.example.pricetag.features.order.entity.Order;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
@@ -65,5 +66,7 @@ public interface OrderRepo extends JpaRepository<Order, Long> {
             LocalDateTime now, Pageable pageable);
 
     Optional<Order> findByUserIdAndCheckoutKey(Long userId, String checkoutKey);
+
+    Page<Order> findAllByUserIdAndStatus(Long userId, OrderStatus status, Pageable pageable);
 
 }

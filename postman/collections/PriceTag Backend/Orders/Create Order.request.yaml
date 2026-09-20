@@ -1,11 +1,19 @@
 $kind: http-request
 name: Create Order
+description: |-
+  Requires a non-empty cart and an address belonging to the signed-in user.
+  Generates checkoutIdempotencyKey in the selected environment only when empty.
+  Send again with the same key and body to retry the same checkout safely.
+  For a NEW checkout, clear checkoutIdempotencyKey in the environment first.
+  A successful response saves orderNumber and checkoutRequestBody for subsequent requests.
 order: 3000
 method: POST
 url: '{{baseUrl}}/api/v1/orders'
 headers:
   - key: Content-Type
     value: application/json
+  - key: Idempotency-Key
+    value: '{{checkoutIdempotencyKey}}'
 body:
   type: json
   content: |-
@@ -14,3 +22,33 @@ body:
       "recipientName": "John Doe",
       "phoneNumber": "+1234567890"
     }
+scripts:
+  - type: beforeRequest
+    language: text/javascript
+    code: |-
+      let key = pm.environment.get("checkoutIdempotencyKey");
+      if (!key) {
+        key = pm.variables.replaceIn("{{$guid}}");
+        pm.environment.set("checkoutIdempotencyKey", key);
+        pm.environment.unset("checkoutOrderNumber");
+        pm.environment.unset("checkoutRequestBody");
+      }
+      pm.variables.set("checkoutIdempotencyKey", key);
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Checkout returns 201", () => pm.response.to.have.status(201));
+      if (pm.response.code === 201) {
+        const result = pm.response.json();
+        pm.test("Order was created or replayed successfully", () => {
+          pm.expect(result.success).to.eql(true);
+          pm.expect(result.data.orderNumber).to.be.a("string");
+          const previous = pm.environment.get("checkoutOrderNumber");
+          if (previous) pm.expect(result.data.orderNumber).to.eql(previous);
+        });
+        if (result.success && result.data && result.data.orderNumber) {
+          pm.environment.set("orderNumber", result.data.orderNumber);
+          pm.environment.set("checkoutOrderNumber", result.data.orderNumber);
+          pm.environment.set("checkoutRequestBody", pm.variables.replaceIn(pm.request.body.raw));
+        }
+      }

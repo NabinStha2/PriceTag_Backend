@@ -19,6 +19,12 @@ public class StripePaymentIntentService {
     }
 
     public void cancel(String paymentIntentId) {
+        if (paymentIntentId == null || paymentIntentId.isBlank()) {
+            throw new ApplicationException("PAYMENT_REFERENCE_MISSING",
+                                           "Cannot cancel payment without a payment reference",
+                                           HttpStatus.CONFLICT);
+        }
+
         try {
             PaymentIntent paymentIntent = stripeClient
                     .v1()
@@ -34,14 +40,23 @@ public class StripePaymentIntentService {
                                                HttpStatus.CONFLICT);
             }
 
-            stripeClient.v1().paymentIntents().cancel(paymentIntentId);
-        } catch (ApplicationException exception) {
-            throw exception;
+            PaymentIntent cancelledIntent = stripeClient
+                    .v1()
+                    .paymentIntents()
+                    .cancel(paymentIntentId);
+
+            if (!"canceled".equals(cancelledIntent.getStatus())) {
+                throw new ApplicationException("PAYMENT_CANCELLATION_UNCONFIRMED",
+                                               "Payment cancellation could not be confirmed",
+                                               HttpStatus.CONFLICT);
+            }
+
         } catch (StripeException exception) {
             log.error("Unable to cancel Stripe PaymentIntent {}: {}", paymentIntentId,
                       exception.getMessage());
+
             throw new ApplicationException("STRIPE_CANCELLATION_ERROR",
-                                           "Unable to cancel the Stripe payment",
+                                           "Unable to cancel the Stripe payment. Please try again.",
                                            HttpStatus.BAD_GATEWAY);
         }
     }

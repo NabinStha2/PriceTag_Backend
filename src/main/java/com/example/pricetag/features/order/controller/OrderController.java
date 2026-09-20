@@ -51,13 +51,17 @@ public class OrderController {
             String sortBy,
             @RequestParam(name = "order",
                     required = false)
-            String order) {
+            String order,
+            @RequestParam(name = "status",
+                    required = false)
+            String status) {
         PaginationRequestDto paginationRequestDto = PaginationRequestDto
                 .builder()
                 .page(page)
                 .limit(limit)
                 .sortBy(sortBy)
                 .order(order)
+                .status(status)
                 .build();
 
         return ResponseEntity

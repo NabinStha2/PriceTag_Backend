@@ -5,7 +5,6 @@ import com.example.pricetag.enums.PaymentStatus;
 import com.example.pricetag.exceptions.ApplicationException;
 import com.example.pricetag.features.Variant.entity.Variants;
 import com.example.pricetag.features.Variant.repository.VariantRepo;
-import com.example.pricetag.features.cart.repository.CartRepo;
 import com.example.pricetag.features.order.entity.Order;
 import com.example.pricetag.features.order.entity.OrderStatusHistory;
 import com.example.pricetag.features.order.repository.OrderRepo;
@@ -33,7 +32,7 @@ public class OrderLifecycleService {
     private final StripePaymentIntentService stripePaymentIntentService;
 
     public OrderLifecycleService(OrderRepo orderRepo, PaymentRepo paymentRepo,
-                                 VariantRepo variantRepo, CartRepo cartRepo,
+                                 VariantRepo variantRepo,
                                  StripePaymentIntentService stripePaymentIntentService) {
         this.orderRepo = orderRepo;
         this.paymentRepo = paymentRepo;

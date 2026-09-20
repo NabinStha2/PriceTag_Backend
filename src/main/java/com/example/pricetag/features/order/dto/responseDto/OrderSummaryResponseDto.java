@@ -24,4 +24,5 @@ public class OrderSummaryResponseDto {
 
     private String trackingNumber;
     private LocalDateTime createdAt;
+    private LocalDateTime expiresAt;
 }

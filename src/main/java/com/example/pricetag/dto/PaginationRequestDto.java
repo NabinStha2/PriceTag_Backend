@@ -16,4 +16,5 @@ public class PaginationRequestDto {
     private String sortBy;
     private String order;
     private String search;
+    private String status;
 }

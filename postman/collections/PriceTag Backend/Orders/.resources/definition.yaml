@@ -1,3 +1,11 @@
 $kind: collection
 name: Orders
-description: Order management endpoints.
+description: |-
+  Select the local environment and log in before sending these requests.
+  Create Order generates and retains checkoutIdempotencyKey (a UUID).
+  Repeat Create Order without changing its body to verify the same order is returned.
+  Clear checkoutIdempotencyKey before starting a new checkout; keep it after network errors.
+  Successful checkout saves orderNumber for order details, cancellation, and payment initialization.
+  Run the Idempotency Checks folder after a successful checkout and before cancellation/payment.
+  The conflict check uses the saved body with a changed recipient name; it should return 409.
+  Missing and invalid keys should return 400 without creating an order.

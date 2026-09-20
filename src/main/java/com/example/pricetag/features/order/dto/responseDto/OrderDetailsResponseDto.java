@@ -17,7 +17,6 @@ import java.util.List;
 public class OrderDetailsResponseDto {
     private Long orderId;
     private String orderNumber;
-
     private OrderStatus status;
     private PaymentStatus paymentStatus;
 
@@ -35,4 +34,5 @@ public class OrderDetailsResponseDto {
     private String cancellationReason;
     private LocalDateTime paidAt;
     private LocalDateTime createdAt;
+    private LocalDateTime expiresAt;
 }
