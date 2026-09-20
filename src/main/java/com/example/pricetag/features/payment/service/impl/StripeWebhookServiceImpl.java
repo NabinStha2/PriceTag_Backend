@@ -1,6 +1,5 @@
 package com.example.pricetag.features.payment.service.impl;
 
-import com.example.pricetag.enums.CartStatus;
 import com.example.pricetag.enums.OrderStatus;
 import com.example.pricetag.enums.PaymentStatus;
 import com.example.pricetag.exceptions.ApplicationException;
@@ -38,7 +37,6 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
     private final String webhookSecret;
     private final OrderRepo orderRepo;
     private final PaymentRepo paymentRepo;
-    private final CartRepo cartRepo;
 
     public StripeWebhookServiceImpl(
             @Value("${stripe.webhook-secret}")
@@ -46,7 +44,6 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
         this.webhookSecret = webhookSecret;
         this.orderRepo = orderRepo;
         this.paymentRepo = paymentRepo;
-        this.cartRepo = cartRepo;
     }
 
 
@@ -204,21 +201,6 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
                                                            .getUser()
                                                            .getEmail())
                                        .build());
-
-        /*
-         * Order items are already stored as snapshots.
-         * The successfully paid cart can now be cleared.
-         */
-        cartRepo
-                .findByUserIdForCheckout(order
-                                                 .getUser()
-                                                 .getId())
-                .ifPresent(cart -> {
-                    cart
-                            .getCartItems()
-                            .clear();
-                    cart.setStatus(CartStatus.ACTIVE);
-                });
 
         /*
          * Explicit save calls aren't required because Payment, Order

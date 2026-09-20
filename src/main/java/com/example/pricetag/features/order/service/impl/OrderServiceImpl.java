@@ -193,7 +193,7 @@ public class OrderServiceImpl implements OrderService {
                */
                     variant.setStockQuantity(variant.getStockQuantity() - cartItem.getQuantity());
                 });
-        
+
         order.setShippingAmt(subtotal[0].compareTo(BigDecimal.valueOf(100)) >= 0 ? BigDecimal.ZERO :
                              BigDecimal.valueOf(10));
         order.setTaxAmt(subtotal[0].multiply(BigDecimal.valueOf(0.1))); // 10% tax
@@ -205,20 +205,22 @@ public class OrderServiceImpl implements OrderService {
                                   .add(order.getTaxAmt()));
         order.setExpiresAt(LocalDateTime
                                    .now()
-                                   .plusMinutes(15)); // Order expires in 15 minutes
+                                   .plusMinutes(60)); // Order expires in 60 minutes
+
 
          /*
-           * Stop the customer modifying the cart while payment is
-           pending.
-           */
-        cart.setStatus(CartStatus.CHECKOUT);
-
- /*
            * OrderItem entities are saved automatically because
            Order has
            * cascade = CascadeType.ALL.
            */
         Order savedOrder = orderRepo.save(order);
+
+        // Checkout consumes the current cart contents immediately.
+        cart
+                .getCartItems()
+                .clear();
+        cart.setStatus(CartStatus.ACTIVE);
+
 
         return CommonResponseDto
                 .<CreateOrderResponseDto>builder()

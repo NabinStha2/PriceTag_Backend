@@ -1,6 +1,5 @@
 package com.example.pricetag.features.order.service;
 
-import com.example.pricetag.enums.CartStatus;
 import com.example.pricetag.enums.OrderStatus;
 import com.example.pricetag.enums.PaymentStatus;
 import com.example.pricetag.exceptions.ApplicationException;
@@ -31,7 +30,6 @@ public class OrderLifecycleService {
     private final OrderRepo orderRepo;
     private final PaymentRepo paymentRepo;
     private final VariantRepo variantRepo;
-    private final CartRepo cartRepo;
     private final StripePaymentIntentService stripePaymentIntentService;
 
     public OrderLifecycleService(OrderRepo orderRepo, PaymentRepo paymentRepo,
@@ -40,7 +38,6 @@ public class OrderLifecycleService {
         this.orderRepo = orderRepo;
         this.paymentRepo = paymentRepo;
         this.variantRepo = variantRepo;
-        this.cartRepo = cartRepo;
         this.stripePaymentIntentService = stripePaymentIntentService;
     }
 
@@ -48,14 +45,14 @@ public class OrderLifecycleService {
     public Order cancelPendingOrder(String orderNumber, Long userId, String reason) {
         Order order = orderRepo
                 .findByOrderNumberAndUserIdForUpdate(orderNumber, userId)
-                .orElseThrow(() -> new ApplicationException(
-                        "ORDER_NOT_FOUND", "Order not found for user", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException("ORDER_NOT_FOUND",
+                                                            "Order not found for user",
+                                                            HttpStatus.NOT_FOUND));
 
         requirePendingPayment(order);
-        transition(order, OrderStatus.CANCELLED, PaymentStatus.CANCELLED, reason,
-                   order
-                           .getUser()
-                           .getId(), order
+        transition(order, OrderStatus.CANCELLED, PaymentStatus.CANCELLED, reason, order
+                .getUser()
+                .getId(), order
                            .getUser()
                            .getEmail());
         return order;
@@ -97,7 +94,6 @@ public class OrderLifecycleService {
         }
 
         restoreStock(order);
-        releaseCart(order);
 
         OrderStatus previousStatus = order.getStatus();
         order.setStatus(orderStatus);
@@ -155,20 +151,11 @@ public class OrderLifecycleService {
                     if (variant == null) {
                         throw new ApplicationException("STOCK_RESTORE_FAILED",
                                                        "Unable to restore stock for SKU " +
-                                                       item.getSku(),
-                                                       HttpStatus.CONFLICT);
+                                                       item.getSku(), HttpStatus.CONFLICT);
                     }
                     variant.setStockQuantity(variant.getStockQuantity() + item.getQuantity());
                 });
 
         order.setStockRestored(true);
-    }
-
-    private void releaseCart(Order order) {
-        cartRepo
-                .findByUserIdForCheckout(order
-                                                 .getUser()
-                                                 .getId())
-                .ifPresent(cart -> cart.setStatus(CartStatus.ACTIVE));
     }
 }
