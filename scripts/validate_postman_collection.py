@@ -21,7 +21,9 @@ def normalize_path(path: str) -> str:
     path = path.split("?", 1)[0].strip().rstrip("/")
     if not path:
         return "/"
-    return re.sub(r"\{[^}/]+\}|:[^/]+", ":param", path)
+    # Match Postman's double braces before OpenAPI's single braces so no
+    # trailing brace remains ({{id}} must normalize to :param, not :param}).
+    return re.sub(r"\{\{[^}/]+\}\}|\{[^}/]+\}|:[^/]+", ":param", path)
 
 
 def read_postman_operations() -> set[tuple[str, str]]:

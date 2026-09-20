@@ -1,0 +1,18 @@
+$kind: http-request
+name: Update Review
+order: 6000
+method: PATCH
+url: '{{baseUrl}}/api/v1/rating-review/update/{{id}}'
+pathVariables:
+  - key: id
+    value: '1'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "rating": 5,
+      "review": "Updated review: very comfortable!"
+    }
