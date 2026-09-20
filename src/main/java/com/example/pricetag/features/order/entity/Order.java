@@ -20,7 +20,8 @@ import java.util.List;
                 columnList = "order_status"), @Index(name = "idx_order_payment_status",
                 columnList = "payment_status")},
         uniqueConstraints = {@UniqueConstraint(name = "uk_order_number",
-                columnNames = "order_number")})
+                columnNames = "order_number"), @UniqueConstraint(name = "uk_order_user_checkout_key",
+                columnNames = {"user_id", "checkout_key"})})
 @Getter
 @Setter
 @SuperBuilder
@@ -55,6 +56,20 @@ public class Order extends BaseEntity {
 
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
+
+    @Column(
+            name = "checkout_key",
+            length = 36,
+            updatable = false
+    )
+    private String checkoutKey;
+
+    @Column(
+            name = "checkout_request_hash",
+            length = 64,
+            updatable = false
+    )
+    private String checkoutRequestHash;
 
 
     // =========================

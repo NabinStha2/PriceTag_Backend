@@ -13,7 +13,7 @@ import java.util.List;
 
 public interface OrderService {
     CommonResponseDto<CreateOrderResponseDto> createOrder(
-            CreateOrderRequestDto createOrderRequestDto);
+            CreateOrderRequestDto createOrderRequestDto, String idempotencyKey);
 
     CommonResponseDto<List<OrderSummaryResponseDto>> getAllOrdersByUser(
             PaginationRequestDto paginationRequestDto);

@@ -54,7 +54,9 @@ class OrderLifecycleServiceTest {
 
     @Test
     void cancelPendingOrderCancelsPaymentAndReleasesReservation() {
-        TestData data = pendingOrder(LocalDateTime.now().plusMinutes(10));
+        TestData data = pendingOrder(LocalDateTime
+                                             .now()
+                                             .plusMinutes(10));
         Payment payment = pendingPayment(data.order());
 
         when(orderRepo.findByOrderNumberAndUserIdForUpdate("PT-1", 7L))
@@ -63,42 +65,60 @@ class OrderLifecycleServiceTest {
                 .thenReturn(Optional.of(payment));
         when(variantRepo.findAllByIdForUpdate(List.of(20L)))
                 .thenReturn(List.of(data.variant()));
-        when(cartRepo.findByUserIdForCheckout(7L)).thenReturn(Optional.of(data.cart()));
+        when(cartRepo.findByUserIdForUpdate(7L)).thenReturn(Optional.of(data.cart()));
 
         Order result = service.cancelPendingOrder("PT-1", 7L, "Changed my mind");
 
         assertEquals(OrderStatus.CANCELLED, result.getStatus());
         assertEquals(PaymentStatus.CANCELLED, result.getPaymentStatus());
         assertEquals(PaymentStatus.CANCELLED, payment.getPaymentStatus());
-        assertEquals(7, data.variant().getStockQuantity());
+        assertEquals(7, data
+                .variant()
+                .getStockQuantity());
         assertTrue(result.isStockRestored());
-        assertEquals(CartStatus.ACTIVE, data.cart().getStatus());
-        assertEquals(1, result.getStatusHistory().size());
+        assertEquals(CartStatus.ACTIVE, data
+                .cart()
+                .getStatus());
+        assertEquals(1, result
+                .getStatusHistory()
+                .size());
         verify(stripePaymentIntentService).cancel("pi_123");
     }
 
     @Test
     void expirePendingOrderWithoutPaymentStillRestoresStock() {
-        TestData data = pendingOrder(LocalDateTime.now().minusMinutes(1));
+        TestData data = pendingOrder(LocalDateTime
+                                             .now()
+                                             .minusMinutes(1));
 
         when(orderRepo.findByIdForUpdate(10L)).thenReturn(Optional.of(data.order()));
         when(paymentRepo.findByOrderIdAndPaymentProviderForUpdate(10L, "STRIPE"))
                 .thenReturn(Optional.empty());
         when(variantRepo.findAllByIdForUpdate(List.of(20L)))
                 .thenReturn(List.of(data.variant()));
-        when(cartRepo.findByUserIdForCheckout(7L)).thenReturn(Optional.of(data.cart()));
+        when(cartRepo.findByUserIdForUpdate(7L)).thenReturn(Optional.of(data.cart()));
 
         assertTrue(service.expirePendingOrder(10L));
-        assertEquals(OrderStatus.EXPIRED, data.order().getStatus());
-        assertEquals(PaymentStatus.EXPIRED, data.order().getPaymentStatus());
-        assertEquals(7, data.variant().getStockQuantity());
+        assertEquals(OrderStatus.EXPIRED, data
+                .order()
+                .getStatus());
+        assertEquals(PaymentStatus.EXPIRED, data
+                .order()
+                .getPaymentStatus());
+        assertEquals(7, data
+                .variant()
+                .getStockQuantity());
         verifyNoInteractions(stripePaymentIntentService);
     }
 
     @Test
     void paidOrderCannotBeCancelled() {
-        TestData data = pendingOrder(LocalDateTime.now().plusMinutes(10));
-        data.order().setPaymentStatus(PaymentStatus.SUCCEEDED);
+        TestData data = pendingOrder(LocalDateTime
+                                             .now()
+                                             .plusMinutes(10));
+        data
+                .order()
+                .setPaymentStatus(PaymentStatus.SUCCEEDED);
 
         when(orderRepo.findByOrderNumberAndUserIdForUpdate("PT-1", 7L))
                 .thenReturn(Optional.of(data.order()));
@@ -110,13 +130,17 @@ class OrderLifecycleServiceTest {
                 () -> service.cancelPendingOrder("PT-1", 7L, "Changed my mind"));
 
         assertEquals("PAYMENT_ALREADY_SUCCEEDED", exception.getErrorCode());
-        assertEquals(5, data.variant().getStockQuantity());
+        assertEquals(5, data
+                .variant()
+                .getStockQuantity());
         verifyNoInteractions(variantRepo, cartRepo, stripePaymentIntentService);
     }
 
     @Test
     void expiryIsRecheckedAfterTheOrderLockIsAcquired() {
-        TestData data = pendingOrder(LocalDateTime.now().plusMinutes(1));
+        TestData data = pendingOrder(LocalDateTime
+                                             .now()
+                                             .plusMinutes(1));
         when(orderRepo.findByIdForUpdate(10L)).thenReturn(Optional.of(data.order()));
 
         assertFalse(service.expirePendingOrder(10L));
@@ -124,9 +148,22 @@ class OrderLifecycleServiceTest {
     }
 
     private TestData pendingOrder(LocalDateTime expiresAt) {
-        User user = User.builder().id(7L).email("buyer@example.com").build();
-        Variants variant = Variants.builder().id(20L).sku("SKU-1").stockQuantity(5).build();
-        Cart cart = Cart.builder().user(user).status(CartStatus.CHECKOUT).build();
+        User user = User
+                .builder()
+                .id(7L)
+                .email("buyer@example.com")
+                .build();
+        Variants variant = Variants
+                .builder()
+                .id(20L)
+                .sku("SKU-1")
+                .stockQuantity(5)
+                .build();
+        Cart cart = Cart
+                .builder()
+                .user(user)
+                .status(CartStatus.CHECKOUT)
+                .build();
         Order order = Order
                 .builder()
                 .id(10L)

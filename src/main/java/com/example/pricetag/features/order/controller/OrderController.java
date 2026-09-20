@@ -27,12 +27,15 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<CommonResponseDto<CreateOrderResponseDto>> createOrder(
+            @RequestHeader(value = "Idempotency-Key",
+                    required = false)
+            String idempotencyKey,
             @Valid
             @RequestBody
             CreateOrderRequestDto createOrderRequestDto) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(orderService.createOrder(createOrderRequestDto));
+                .body(orderService.createOrder(createOrderRequestDto, idempotencyKey));
     }
 
     @GetMapping

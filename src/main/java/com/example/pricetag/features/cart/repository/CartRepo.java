@@ -19,9 +19,8 @@ public interface CartRepo extends JpaRepository<Cart, Long> {
 
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT distinct c FROM Cart c " + "LEFT JOIN FETCH c.cartItems ci " +
-           "LEFT JOIN FETCH ci.variant v " + "WHERE c.user.id = :userId")
-    Optional<Cart> findByUserIdForCheckout(
+    @Query("SELECT c FROM Cart c WHERE c.user.id = :userId")
+    Optional<Cart> findByUserIdForUpdate(
             @Param("userId")
             Long userId);
 }

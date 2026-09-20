@@ -62,7 +62,8 @@ public interface OrderRepo extends JpaRepository<Order, Long> {
             """)
     List<Long> findExpiredPendingPaymentOrderIds(
             @Param("now")
-            LocalDateTime now,
-            Pageable pageable);
+            LocalDateTime now, Pageable pageable);
+
+    Optional<Order> findByUserIdAndCheckoutKey(Long userId, String checkoutKey);
 
 }

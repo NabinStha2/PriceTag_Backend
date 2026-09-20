@@ -13,6 +13,7 @@ import com.example.pricetag.features.address.repository.AddressRepo;
 import com.example.pricetag.features.auth.service.AuthService;
 import com.example.pricetag.features.cart.entity.Cart;
 import com.example.pricetag.features.cart.repository.CartRepo;
+import com.example.pricetag.features.cart.service.CartAccessService;
 import com.example.pricetag.features.order.dto.requestDto.CancelOrderRequestDto;
 import com.example.pricetag.features.order.dto.requestDto.CreateOrderRequestDto;
 import com.example.pricetag.features.order.dto.responseDto.CreateOrderResponseDto;
@@ -33,16 +34,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -60,10 +62,12 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepo orderRepo;
     private final OrderMapper orderMapper;
     private final OrderLifecycleService orderLifecycleService;
+    private final CartAccessService cartAccessService;
 
     public OrderServiceImpl(AuthService authService, CartRepo cartRepo, AddressRepo addressRepo,
                             VariantRepo variantRepo, OrderRepo orderRepo, OrderMapper orderMapper,
-                            OrderLifecycleService orderLifecycleService) {
+                            OrderLifecycleService orderLifecycleService,
+                            CartAccessService cartAccessService) {
         this.authService = authService;
         this.cartRepo = cartRepo;
         this.addressRepo = addressRepo;
@@ -71,22 +75,47 @@ public class OrderServiceImpl implements OrderService {
         this.orderRepo = orderRepo;
         this.orderMapper = orderMapper;
         this.orderLifecycleService = orderLifecycleService;
+        this.cartAccessService = cartAccessService;
     }
 
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public CommonResponseDto<CreateOrderResponseDto> createOrder(
-            CreateOrderRequestDto createOrderRequestDto) {
-        User user = authService.getUser();
+            CreateOrderRequestDto createOrderRequestDto, String idempotencyKey) {
+        String checkoutKey = normalizeCheckoutKey(idempotencyKey);
+        String requestHash = fingerprint(createOrderRequestDto);
+
+        User authenticatedUser = authService.getUser();
+
+        // Serialize this user's cart and order-creation operations.
+        User user = cartAccessService.lockUser(authenticatedUser);
+
+        Order existingOrder = orderRepo
+                .findByUserIdAndCheckoutKey(user.getId(), checkoutKey)
+                .orElse(null);
+
+        if (existingOrder != null) {
+            if (!requestHash.equals(existingOrder.getCheckoutRequestHash())) {
+                throw new ApplicationException("IDEMPOTENCY_KEY_REUSED",
+                                               "This checkout key was already used with different details",
+                                               HttpStatus.CONFLICT);
+            }
+
+            return CommonResponseDto
+                    .<CreateOrderResponseDto>builder()
+                    .success(true)
+                    .status(HttpStatus.CREATED.value())
+                    .message("Order created. Payment is required.")
+                    .data(orderMapper.mapOrderToCreateOrderResponseDto(existingOrder))
+                    .build();
+        }
 
          /*
            * Lock the cart so another checkout request cannot
            process it
            * concurrently.
            */
-        Cart cart = cartRepo
-                .findByUserIdForCheckout(user.getId())
-                .orElseThrow(() -> new ApplicationException("404", "Cart not found for user",
-                                                            HttpStatus.NOT_FOUND));
+        Cart cart = cartAccessService.requireExisting(user);
         validateCart(cart);
 
         /*
@@ -132,6 +161,8 @@ public class OrderServiceImpl implements OrderService {
                 .shippingAddressSnapshot(shippingAddressSnapshot)
                 .orderNumber(generateOrderNumber())
                 .status(OrderStatus.PENDING_PAYMENT)
+                .checkoutKey(checkoutKey)
+                .checkoutRequestHash(requestHash)
                 .build();
 
         final BigDecimal[] subtotal = {BigDecimal.ZERO};
@@ -206,7 +237,6 @@ public class OrderServiceImpl implements OrderService {
         order.setExpiresAt(LocalDateTime
                                    .now()
                                    .plusMinutes(60)); // Order expires in 60 minutes
-
 
          /*
            * OrderItem entities are saved automatically because
@@ -405,6 +435,50 @@ public class OrderServiceImpl implements OrderService {
 
         return "PT-" + date + "-" + randomPart;
     }
+
+    private String normalizeCheckoutKey(String rawKey) {
+        if (rawKey == null || !rawKey.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-" +
+                                              "[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")) {
+            throw new ApplicationException("INVALID_IDEMPOTENCY_KEY",
+                                           "Idempotency-Key must be a valid UUID",
+                                           HttpStatus.BAD_REQUEST);
+        }
+
+        return UUID
+                .fromString(rawKey)
+                .toString();
+    }
+
+    private String fingerprint(CreateOrderRequestDto request) {
+        if (request == null || request.getAddressId() == null ||
+            request.getRecipientName() == null || request.getPhoneNumber() == null) {
+
+            throw new ApplicationException("INVALID_CHECKOUT_REQUEST",
+                                           "Address, recipient name, and phone number are required",
+                                           HttpStatus.BAD_REQUEST);
+        }
+
+        String recipientName = request.getRecipientName();
+        String phoneNumber = request.getPhoneNumber();
+
+        // Length prefixes prevent ambiguous field boundaries.
+        String payload =
+                "checkout-v1|" + request.getAddressId() + "|" + recipientName.length() + ":" +
+                recipientName + "|" + phoneNumber.length() + ":" + phoneNumber;
+
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            byte[] hash = digest.digest(payload.getBytes(StandardCharsets.UTF_8));
+
+            return HexFormat
+                    .of()
+                    .formatHex(hash);
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 is not available", exception);
+        }
+    }
+
 
     // ------------------------------------------------------------------------------------
 }

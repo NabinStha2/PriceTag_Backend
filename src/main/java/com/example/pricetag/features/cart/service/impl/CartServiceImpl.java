@@ -15,11 +15,12 @@ import com.example.pricetag.features.cart.entity.CartItem;
 import com.example.pricetag.features.cart.mapper.CartMapper;
 import com.example.pricetag.features.cart.repository.CartItemRepo;
 import com.example.pricetag.features.cart.repository.CartRepo;
+import com.example.pricetag.features.cart.service.CartAccessService;
 import com.example.pricetag.features.cart.service.CartService;
 import com.example.pricetag.features.user.entity.User;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -28,27 +29,36 @@ import java.math.BigDecimal;
 @Transactional
 public class CartServiceImpl implements CartService {
     private final AuthService authService;
-    private final CartRepo cartRepo;
     private final VariantRepo variantRepo;
     private final CartItemRepo cartItemRepo;
     private final CartMapper cartMapper;
+    private final CartAccessService cartAccessService;
 
     public CartServiceImpl(AuthService authService, CartRepo cartRepo, VariantRepo variantRepo,
-                           CartItemRepo cartItemRepo, CartMapper cartMapper) {
+                           CartItemRepo cartItemRepo, CartMapper cartMapper,
+                           CartAccessService cartAccessService) {
         this.authService = authService;
-        this.cartRepo = cartRepo;
         this.variantRepo = variantRepo;
         this.cartItemRepo = cartItemRepo;
         this.cartMapper = cartMapper;
+        this.cartAccessService = cartAccessService;
     }
 
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public CommonResponseDto<Void> addItemToCart(AddCartItemRequestDto addCartItemRequestDto) {
         User user = authService.getUser();
 
         Cart existingCart = getOrCreateCartSafely(user);
 
         checkCartStatus(existingCart);
+
+        Integer requestedQuantity = addCartItemRequestDto.getQuantity();
+
+        if (requestedQuantity == null || requestedQuantity <= 0) {
+            throw new ApplicationException("INVALID_QUANTITY", "Quantity must be greater than zero",
+                                           HttpStatus.BAD_REQUEST);
+        }
 
         Variants existingVariant = variantRepo
                 .findByIdAndIsActiveTrue(addCartItemRequestDto.getVariantId())
@@ -60,47 +70,48 @@ public class CartServiceImpl implements CartService {
                                   existingVariant.getDiscountedPrice() :
                                   existingVariant.getActualPrice();
 
-        CartItem existingCartItem = cartItemRepo
-                .findByCartIdAndVariantId(existingCart.getId(),
-                                          addCartItemRequestDto.getVariantId())
+        if (newUnitPrice == null || newUnitPrice.signum() < 0) {
+            throw new ApplicationException("INVALID_PRICE",
+                                           "This product does not have a valid price",
+                                           HttpStatus.CONFLICT);
+        }
+
+        CartItem existingCartItem = existingCart
+                .getCartItems()
+                .stream()
+                .filter(item -> item
+                        .getVariant()
+                        .getId()
+                        .equals(addCartItemRequestDto.getVariantId()))
+                .findFirst()
                 .orElse(null);
 
+        int currentQuantity = existingCartItem == null ? 0 : existingCartItem.getQuantity();
+
+        long combinedQuantity = (long) currentQuantity + requestedQuantity;
+
+        if (combinedQuantity > existingVariant.getStockQuantity()) {
+            throw new ApplicationException("INSUFFICIENT_STOCK",
+                                           "Only " + existingVariant.getStockQuantity() +
+                                           " left in stock", HttpStatus.BAD_REQUEST);
+        }
+
+
         if (existingCartItem != null) {
-            int newQuantity = addCartItemRequestDto.getQuantity() + existingCartItem.getQuantity();
-            if (newQuantity > existingVariant.getStockQuantity()) {
-                throw new ApplicationException("400", "Only " + existingVariant.getStockQuantity() +
-                                                      " left in stock", HttpStatus.BAD_REQUEST);
-            }
-            existingCartItem.setQuantity(newQuantity);
+            existingCartItem.setQuantity((int) combinedQuantity);
             existingCartItem.setUnitPrice(newUnitPrice);
         } else {
-            if (addCartItemRequestDto.getQuantity() > existingVariant.getStockQuantity()) {
-                throw new ApplicationException("400", "Only " + existingVariant.getStockQuantity() +
-                                                      " left in stock", HttpStatus.BAD_REQUEST);
-            }
-
-            try {
-                cartItemRepo.saveAndFlush(CartItem
-                                                  .builder()
-                                                  .cart(existingCart)
-                                                  .variant(existingVariant)
-                                                  .quantity(addCartItemRequestDto.getQuantity())
-                                                  .unitPrice(newUnitPrice)
-                                                  .build());
-            } catch (DataIntegrityViolationException e) {
-                // Lost a race - another request inserted this exact
-                // (cart, variant) pair between our findByCartIdAndVariantId
-                // check above and this insert (e.g. a double-tapped "add
-                // to cart" button firing two requests). Merge into the row
-                // that won instead of failing the request.
-                CartItem winner = cartItemRepo
-                        .findByCartIdAndVariantId(existingCart.getId(), existingVariant.getId())
-                        .orElseThrow(() -> new ApplicationException("409",
-                                                                    "Cart Item creation conflict. Please try again.",
-                                                                    HttpStatus.CONFLICT));
-                winner.setQuantity(winner.getQuantity() + addCartItemRequestDto.getQuantity());
-                winner.setUnitPrice(newUnitPrice);
-            }
+            CartItem newCartItem = CartItem
+                    .builder()
+                    .cart(existingCart)
+                    .variant(existingVariant)
+                    .quantity(requestedQuantity)
+                    .unitPrice(newUnitPrice)
+                    .build();
+            existingCart
+                    .getCartItems()
+                    .add(newCartItem);
+            cartItemRepo.save(newCartItem);
         }
 
         return CommonResponseDto
@@ -229,22 +240,7 @@ public class CartServiceImpl implements CartService {
 
     // Helper Method
     public Cart getOrCreateCartSafely(User user) {
-        return cartRepo
-                .findByUserId(user.getId())
-                .orElseGet(() -> {
-                    try {
-                        return cartRepo.saveAndFlush(Cart
-                                                             .builder()
-                                                             .user(user)
-                                                             .build());
-                    } catch (DataIntegrityViolationException e) {
-                        return cartRepo
-                                .findByUserId(user.getId())
-                                .orElseThrow(() -> new ApplicationException("409",
-                                                                            "Cart creation conflict. Please try again.",
-                                                                            HttpStatus.CONFLICT));
-                    }
-                });
+        return cartAccessService.getOrCreate(user);
     }
 
     public void checkCartStatus(Cart cart) {
