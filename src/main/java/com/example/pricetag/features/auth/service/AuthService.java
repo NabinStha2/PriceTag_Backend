@@ -20,6 +20,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -183,10 +184,13 @@ public class AuthService implements UserDetailsService {
     }
 
     public Long getCurrentUserId() {
-        AuthDetails authDetails = (AuthDetails) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
+        AuthDetails authDetails = (AuthDetails) Objects
+                .requireNonNull(SecurityContextHolder
+                                        .getContext()
+                                        .getAuthentication())
                 .getPrincipal();
-        return authDetails.getId();
+        return Objects
+                .requireNonNull(authDetails)
+                .getId();
     }
 }
