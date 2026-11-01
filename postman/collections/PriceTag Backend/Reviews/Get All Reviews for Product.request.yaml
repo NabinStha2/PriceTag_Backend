@@ -1,0 +1,19 @@
+$kind: http-request
+name: Get All Reviews for Product
+order: 4000
+method: GET
+url: '{{baseUrl}}/api/v1/rating-review/product/{{productId}}'
+pathVariables:
+  - key: productId
+    value: '1'
+queryParams:
+  - key: page
+    value: '1'
+  - key: limit
+    value: '5'
+  - key: sortBy
+    value: ''
+    disabled: true
+  - key: order
+    value: ''
+    disabled: true

@@ -1,0 +1,23 @@
+$kind: http-request
+name: Update Variant
+order: 5000
+method: PATCH
+url: '{{baseUrl}}/api/v1/variant/edit/{{variantId}}'
+pathVariables:
+  - key: variantId
+    value: '1'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "sizeId": 1,
+      "colorId": 2,
+      "sku": "TSHIRT-BLUE-M",
+      "stockQuantity": 30,
+      "actualPrice": 29.99,
+      "discountedPrice": 22.99,
+      "weightInGrams": 200
+    }

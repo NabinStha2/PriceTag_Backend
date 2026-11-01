@@ -1,0 +1,14 @@
+$kind: http-request
+name: Delete Multiple Addresses
+order: 6000
+method: DELETE
+url: '{{baseUrl}}/api/v1/address/delete_addresses'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "ids": [1, 2, 3]
+    }

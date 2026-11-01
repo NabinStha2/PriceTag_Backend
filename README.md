@@ -133,7 +133,7 @@ The API then listens at `http://localhost:8080`. The `dev` profile supports `MYS
 
 Swagger UI is available at `/swagger-ui/index.html`; OpenAPI JSON is at `/v3/api-docs`. Most routes use `/api/v1`. Protected operations require a bearer access token; use Swagger to inspect endpoint-specific authorization and request schemas.
 
-Postman collection and workspace files are kept locally under `postman/` and `.postman/`, which are excluded from Git. On a fresh clone, import the collection and environment from your Postman workspace. Set `baseUrl` to `http://localhost:8000` for Docker or `http://localhost:8080` for IDE/Maven, then provide authentication and service values.
+The Postman collection and workspace binding are versioned in `postman/` and `.postman/`. Set the local environment's `baseUrl` to `http://localhost:8000` for Docker or `http://localhost:8080` for IDE/Maven, then provide authentication and service values. Access and refresh tokens are stored as empty environment variables and should only be populated locally.
 
 ## Tests and build
 

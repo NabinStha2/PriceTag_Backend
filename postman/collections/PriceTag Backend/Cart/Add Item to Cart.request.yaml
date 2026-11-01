@@ -1,0 +1,15 @@
+$kind: http-request
+name: Add Item to Cart
+order: 2000
+method: POST
+url: '{{baseUrl}}/api/v1/cart/items'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "variantId": 1,
+      "quantity": 2
+    }

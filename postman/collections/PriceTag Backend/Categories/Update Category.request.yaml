@@ -1,0 +1,17 @@
+$kind: http-request
+name: Update Category
+order: 4000
+method: PATCH
+url: '{{baseUrl}}/api/v1/category/update/{{categoryId}}'
+pathVariables:
+  - key: categoryId
+    value: '1'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "categoryName": "Updated Electronics"
+    }

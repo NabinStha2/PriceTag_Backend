@@ -1,0 +1,8 @@
+$kind: http-request
+name: Delete Review
+order: 7000
+method: DELETE
+url: '{{baseUrl}}/api/v1/rating-review/{{id}}'
+pathVariables:
+  - key: id
+    value: '1'

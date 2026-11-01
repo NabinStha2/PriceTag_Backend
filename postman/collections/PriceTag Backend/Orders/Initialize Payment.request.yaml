@@ -1,0 +1,8 @@
+$kind: http-request
+name: Initialize Payment
+order: 5000
+method: POST
+url: '{{baseUrl}}/api/v1/orders/{{orderNumber}}/payment-intent'
+pathVariables:
+  - key: orderNumber
+    value: ORD-123456

@@ -1,0 +1,17 @@
+$kind: http-request
+name: Update Cart Item Quantity
+order: 3000
+method: PATCH
+url: '{{baseUrl}}/api/v1/cart/item/{{itemId}}'
+pathVariables:
+  - key: itemId
+    value: '1'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "quantity": 3
+    }

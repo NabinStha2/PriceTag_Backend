@@ -1,0 +1,3 @@
+$kind: collection
+name: Idempotency Checks
+description: Run after Create Order succeeds. These requests verify rejected checkout attempts and must not create another order.

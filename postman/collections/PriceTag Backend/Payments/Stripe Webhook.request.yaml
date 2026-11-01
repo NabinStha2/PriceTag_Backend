@@ -1,0 +1,22 @@
+$kind: http-request
+name: Stripe Webhook
+order: 1000
+method: POST
+url: '{{baseUrl}}/api/v1/payments/stripe/webhook'
+auth:
+  type: noauth
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Stripe-Signature
+    value: '{{stripeSignature}}'
+body:
+  type: json
+  content: |-
+    {
+      "id": "evt_test_webhook",
+      "type": "payment_intent.succeeded",
+      "data": {
+        "object": {}
+      }
+    }

@@ -1,0 +1,25 @@
+$kind: http-request
+name: Reject Missing Idempotency Key
+order: 2000
+description: Omits Idempotency-Key intentionally. Expected HTTP 400 before cart processing.
+method: POST
+url: '{{baseUrl}}/api/v1/orders'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "addressId": 1,
+      "recipientName": "John Doe",
+      "phoneNumber": "+1234567890"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Missing Idempotency-Key returns 400", () => {
+        pm.response.to.have.status(400);
+        pm.expect(pm.response.json().success).to.eql(false);
+      });

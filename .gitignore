@@ -37,8 +37,6 @@ build/
 .env
 .env.*
 !.env.example
-.postman/
-/postman/
 *.log
 .DS_Store
 src/main/java/com/example/pricetag/request

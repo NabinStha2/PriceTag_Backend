@@ -1,0 +1,17 @@
+$kind: http-request
+name: Cancel Order
+order: 4000
+method: POST
+url: '{{baseUrl}}/api/v1/orders/{{orderNumber}}/cancel'
+pathVariables:
+  - key: orderNumber
+    value: ORD-123456
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Changed my mind"
+    }

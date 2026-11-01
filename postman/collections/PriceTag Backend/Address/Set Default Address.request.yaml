@@ -1,0 +1,8 @@
+$kind: http-request
+name: Set Default Address
+order: 4000
+method: PATCH
+url: '{{baseUrl}}/api/v1/address/{{id}}/default'
+pathVariables:
+  - key: id
+    value: '1'

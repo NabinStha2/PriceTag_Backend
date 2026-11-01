@@ -1,0 +1,36 @@
+$kind: http-request
+name: Reject Reused Key with Different Details
+order: 1000
+description: Uses the successful checkout's UUID and body, but changes the recipient name. Expected HTTP 409.
+method: POST
+url: '{{baseUrl}}/api/v1/orders'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Idempotency-Key
+    value: '{{checkoutIdempotencyKey}}'
+body:
+  type: json
+  content: '{{checkoutConflictBody}}'
+scripts:
+  - type: beforeRequest
+    language: text/javascript
+    code: |-
+      const key = pm.environment.get("checkoutIdempotencyKey");
+      const savedBody = pm.environment.get("checkoutRequestBody");
+      if (!key || !savedBody || !pm.environment.get("checkoutOrderNumber")) {
+        console.warn("Run Create Order successfully before this conflict check.");
+        pm.execution.skipRequest();
+      } else {
+        const body = JSON.parse(savedBody);
+        body.recipientName = body.recipientName + " (changed)";
+        pm.variables.set("checkoutIdempotencyKey", key);
+        pm.variables.set("checkoutConflictBody", JSON.stringify(body));
+      }
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Reusing a key with different details returns 409", () => {
+        pm.response.to.have.status(409);
+        pm.expect(pm.response.json().success).to.eql(false);
+      });

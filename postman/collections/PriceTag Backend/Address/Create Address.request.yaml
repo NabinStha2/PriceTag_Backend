@@ -1,0 +1,22 @@
+$kind: http-request
+name: Create Address
+order: 2000
+method: POST
+url: '{{baseUrl}}/api/v1/address'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "unitNumber": "Apt 4B",
+      "streetNumber": "123",
+      "street": "Main Street",
+      "city": "New York",
+      "state": "NY",
+      "country": "USA",
+      "postalCode": "10001",
+      "label": "Home",
+      "isDefault": true
+    }

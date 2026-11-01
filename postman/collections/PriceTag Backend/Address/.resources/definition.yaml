@@ -1,0 +1,3 @@
+$kind: collection
+name: Address
+description: User address management endpoints.

@@ -1,0 +1,18 @@
+$kind: http-request
+name: Create Sub Category
+order: 3000
+method: POST
+url: '{{baseUrl}}/api/v1/subcategory/{{categoryId}}/add'
+pathVariables:
+  - key: categoryId
+    value: '1'
+body:
+  type: formdata
+  content:
+    - key: subCategoryName
+      type: text
+      value: Smartphones
+    - key: file
+      type: text
+      value: ''
+      description: Sub-category image file
