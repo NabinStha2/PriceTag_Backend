@@ -133,7 +133,7 @@ The API then listens at `http://localhost:8080`. The `dev` profile supports `MYS
 
 Swagger UI is available at `/swagger-ui/index.html`; OpenAPI JSON is at `/v3/api-docs`. Most routes use `/api/v1`. Protected operations require a bearer access token; use Swagger to inspect endpoint-specific authorization and request schemas.
 
-The Postman collection is in `postman/collections/PriceTag Backend`; the local environment is in `postman/environments`. Set `baseUrl` to `http://localhost:8000` for Docker or `http://localhost:8080` for IDE/Maven, then provide auth and service values. The collection includes order, payment, cancellation, and idempotency scenarios.
+Postman collection and workspace files are kept locally under `postman/` and `.postman/`, which are excluded from Git. On a fresh clone, import the collection and environment from your Postman workspace. Set `baseUrl` to `http://localhost:8000` for Docker or `http://localhost:8080` for IDE/Maven, then provide authentication and service values.
 
 ## Tests and build
 
