@@ -35,4 +35,6 @@ build/
 /mysql-data/
 .junie/
 .env
+/postman/
+.postman
 src/main/java/com/example/pricetag/request
